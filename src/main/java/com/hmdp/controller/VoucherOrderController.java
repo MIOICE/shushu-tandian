@@ -2,12 +2,15 @@ package com.hmdp.controller;
 
 
 import com.hmdp.dto.Result;
+import com.hmdp.dto.PaymentCallbackDTO;
 import com.hmdp.risk.RiskLimit;
 import com.hmdp.service.IVoucherOrderService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -41,5 +44,13 @@ public class VoucherOrderController {
     @PostMapping("/{id}/pay")
     public Result payOrder(@PathVariable("id") Long orderId) {
         return voucherOrderService.payOrder(orderId);
+    }
+
+    @PostMapping("/payment/callback")
+    @RiskLimit(userLimit = 300, ipLimit = 300, deviceLimit = 300, windowSeconds = 60)
+    public Result paymentCallback(
+            @RequestHeader(value = "X-Payment-Callback-Token", required = false) String callbackToken,
+            @RequestBody PaymentCallbackDTO callback) {
+        return voucherOrderService.handlePaymentCallback(callbackToken, callback);
     }
 }

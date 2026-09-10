@@ -3,6 +3,7 @@ package com.hmdp;
 import com.hmdp.cache.ShopCacheMetrics;
 import com.hmdp.controller.VoucherOrderController;
 import com.hmdp.risk.RiskLimit;
+import com.hmdp.enums.VoucherOrderStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
@@ -73,6 +74,8 @@ class ArchitectureContractTests {
         String schema = resource("db/hmdp.sql");
         assertTrue(schema.contains("UNIQUE KEY `uk_user_voucher` (`user_id`, `voucher_id`)"));
         assertTrue(schema.contains("INDEX `idx_status_create_time` (`status`, `create_time`)"));
+        assertTrue(schema.contains("UNIQUE KEY `uk_pay_no` (`pay_no`)"));
+        assertTrue(schema.contains("`close_time` timestamp NULL DEFAULT NULL"));
     }
 
     @Test
@@ -83,6 +86,17 @@ class ArchitectureContractTests {
         assertEquals(30, limit.userLimit());
         assertEquals(970, 1000 - limit.userLimit());
         assertEquals(60, limit.windowSeconds());
+    }
+
+    @Test
+    void orderStateMachineAllowsOnlyLegalTransitions() {
+        assertTrue(VoucherOrderStatus.PENDING_PAYMENT.canTransitionTo(VoucherOrderStatus.PAID));
+        assertTrue(VoucherOrderStatus.PENDING_PAYMENT.canTransitionTo(VoucherOrderStatus.CANCELLED));
+        assertTrue(VoucherOrderStatus.PAID.canTransitionTo(VoucherOrderStatus.USED));
+        assertTrue(VoucherOrderStatus.PAID.canTransitionTo(VoucherOrderStatus.REFUNDING));
+        assertTrue(VoucherOrderStatus.REFUNDING.canTransitionTo(VoucherOrderStatus.REFUNDED));
+        assertTrue(!VoucherOrderStatus.CANCELLED.canTransitionTo(VoucherOrderStatus.PAID));
+        assertTrue(!VoucherOrderStatus.REFUNDED.canTransitionTo(VoucherOrderStatus.PAID));
     }
 
     private String resource(String path) throws IOException {

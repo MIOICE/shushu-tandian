@@ -27,6 +27,8 @@ rocketmq:
     send-message-timeout: 3000
     retry-times-when-send-failed: 2
 shushu:
+  payment:
+    callback-token: ${PAYMENT_CALLBACK_TOKEN:}
   risk:
     enabled: ${SHUSHU_RISK_ENABLED:true}
   mq:
@@ -39,6 +41,8 @@ shushu:
     message-retry-delay-ms: 5000
     message-retry-scan-delay-ms: 5000
     message-retry-batch-size: 100
+    reconciliation-initial-delay-ms: 30000
+    reconciliation-delay-ms: 60000
   cache:
     local-ttl-minutes: 5
     redis-ttl-minutes: 30

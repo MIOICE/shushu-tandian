@@ -3,6 +3,7 @@ package com.hmdp.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -48,6 +49,11 @@ public class VoucherOrder implements Serializable {
     private Integer payType;
 
     /**
+     * 支付平台流水号，用于回调幂等。
+     */
+    private String payNo;
+
+    /**
      * 订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款
      */
     private Integer status;
@@ -63,6 +69,11 @@ public class VoucherOrder implements Serializable {
     private LocalDateTime payTime;
 
     /**
+     * 订单关闭时间。
+     */
+    private LocalDateTime closeTime;
+
+    /**
      * 核销时间
      */
     private LocalDateTime useTime;
@@ -76,6 +87,9 @@ public class VoucherOrder implements Serializable {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    @TableField(exist = false)
+    private String statusDescription;
 
 
 }

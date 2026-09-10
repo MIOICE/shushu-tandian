@@ -3,6 +3,7 @@ package com.hmdp.service;
 import com.hmdp.entity.VoucherOrder;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.PaymentCallbackDTO;
 import com.hmdp.event.VoucherOrderEvent;
 
 /**
@@ -24,5 +25,7 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
     Result queryOrder(Long orderId);
 
     Result payOrder(Long orderId);
+
+    Result handlePaymentCallback(String callbackToken, PaymentCallbackDTO callback);
 
 }

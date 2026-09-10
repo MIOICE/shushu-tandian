@@ -114,6 +114,16 @@ public class SeckillReservationService {
         return events;
     }
 
+    public Integer currentStock(Long voucherId) {
+        String value = redisTemplate.opsForValue().get(stockKey(voucherId));
+        return value == null ? null : Integer.valueOf(value);
+    }
+
+    public long pendingCount(Long voucherId) {
+        Long count = redisTemplate.opsForZSet().zCard(pendingKey(voucherId));
+        return count == null ? 0L : count;
+    }
+
     public void initialize(SeckillVoucher voucher, boolean overwriteStock) {
         Long voucherId = voucher.getVoucherId();
         String stock = Integer.toString(voucher.getStock());

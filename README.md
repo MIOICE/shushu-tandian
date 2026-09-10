@@ -7,6 +7,8 @@
 - 秒杀：Redis 预扣库存，Lua 在一个原子操作中校验活动时间、库存和一人一券；MySQL 的 `stock > 0` 条件更新与 `(user_id, voucher_id)` 唯一索引提供最终防线。
 - 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者幂等创建订单。预占事件会由同一个 Lua 原子写入 Redis 待投递区，Broker 确认后清理；确认丢失或进程重启时由定时任务重投。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
 - 超时关闭：每 30 秒分批扫描超过 15 分钟的未支付订单，状态条件更新成功后同时回补 MySQL 与 Redis；Redis Lua 会核对订单号，重复执行不会重复回补，并保留一人一券标记。
+- 订单状态：支付回调凭证校验、支付流水唯一索引和条件更新共同保证幂等；支付与超时关单并发时只有一个状态迁移能够成功。
+- 库存对账：定时比较 MySQL、Redis 与待投递消息数量，正常异步差值标记为 `CONSISTENT`，异常差值标记为 `CHECK_REQUIRED` 并告警。
 - 两级缓存：店铺详情先查 Caffeine，再查 Redis，最后互斥回源 MySQL。更新采用“更新数据库 → 删除缓存 → 提交后再次删除 → RocketMQ 广播补偿 → TTL 兜底”。
 - 风控：`@RiskLimit` + AOP + Redis Lua 实现用户、IP、设备指纹三维滑动窗口，三个维度在同一脚本内原子判断。
 
@@ -21,10 +23,18 @@ mvn spring-boot:run
 
 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、RocketMQ NameServer `9876`、Broker `10911`。配置均可用 [.env.example](./.env.example) 中的环境变量覆盖。
 
+如需启用支付平台回调，必须设置随机的 `PAYMENT_CALLBACK_TOKEN`；未设置时公开回调接口会拒绝所有请求，本人登录后的模拟支付接口不受影响。
+
 首次创建的 MySQL 数据卷会自动导入 `src/main/resources/db/hmdp.sql`。若使用已经导入旧版脚本的数据库，需要手动执行一次：
 
 ```bash
 mysql -uroot -p hmdp < src/main/resources/db/shushu_upgrade.sql
+```
+
+若数据库已经执行过上一版 `shushu_upgrade.sql`，本次订单状态升级需继续执行：
+
+```bash
+mysql -uroot -p hmdp < src/main/resources/db/shushu_order_v2.sql
 ```
 
 新增秒杀券示例（开始和结束时间需改成当前有效时间）：
@@ -86,9 +96,11 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | POST | `/voucher-order/seckill/{voucherId}` | 秒杀受理，返回订单号 |
 | GET | `/voucher-order/{orderId}` | 查询本人订单状态 |
 | POST | `/voucher-order/{orderId}/pay` | 支付未关闭订单 |
+| POST | `/voucher-order/payment/callback` | 携带 `X-Payment-Callback-Token` 的幂等支付回调；订单尚未落库时返回 503 以提示重试 |
 | GET | `/shop/{id}` | 两级缓存查询店铺 |
 | PUT | `/shop` | 更新店铺并触发缓存一致性链路 |
 | GET | `/shop/cache/stats` | 查询缓存命中与回源统计 |
+| GET | `/ops/stock/reconciliation` | 查询最近一次库存对账结果（需登录） |
 
 ## 构建验证
 
