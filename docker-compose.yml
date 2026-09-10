@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: shushu-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: hmdp
+      TZ: Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode=NO_ENGINE_SUBSTITUTION
+    ports:
+      - "3306:3306"
+    volumes:
+      - shushu-mysql-data:/var/lib/mysql
+      - ./src/main/resources/db/hmdp.sql:/docker-entrypoint-initdb.d/01-hmdp.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: shushu-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - shushu-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.4
+    container_name: shushu-rocketmq-namesrv
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+    environment:
+      JAVA_OPT_EXT: -Xms256m -Xmx256m -Xmn128m
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.4
+    container_name: shushu-rocketmq-broker
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.1.4/conf/broker.conf
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+      - "10912:10912"
+    environment:
+      JAVA_OPT_EXT: -Xms512m -Xmx512m -Xmn256m
+    volumes:
+      - ./docker/rocketmq/broker.conf:/home/rocketmq/rocketmq-5.1.4/conf/broker.conf:ro
+      - shushu-rocketmq-store:/home/rocketmq/store
+
+volumes:
+  shushu-mysql-data:
+  shushu-redis-data:
+  shushu-rocketmq-store:

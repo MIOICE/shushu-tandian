@@ -1,0 +1,48 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: shushu-discovery
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/hmdp?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 1
+        time-between-eviction-runs: 10s
+  jackson:
+    default-property-inclusion: non_null # JSON处理时忽略非空字段
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:localhost:9876}
+  producer:
+    group: shushu-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 2
+shushu:
+  risk:
+    enabled: ${SHUSHU_RISK_ENABLED:true}
+  mq:
+    order-topic: shushu-order-topic
+    cache-topic: shushu-cache-topic
+  order:
+    timeout-minutes: 15
+    close-batch-size: 100
+    scan-delay-ms: 30000
+  cache:
+    local-ttl-minutes: 5
+    redis-ttl-minutes: 30
+    maximum-size: 10000
+mybatis-plus:
+  type-aliases-package: com.hmdp.entity # 别名扫描包
+logging:
+  level:
+    com.hmdp: debug
+    org.apache.rocketmq: warn
