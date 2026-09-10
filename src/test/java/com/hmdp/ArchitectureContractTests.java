@@ -24,6 +24,8 @@ class ArchitectureContractTests {
         assertTrue(script.indexOf("HEXISTS") < script.indexOf("DECR"));
         assertTrue(script.indexOf("tonumber(stock) <= 0") < script.indexOf("DECR"));
         assertTrue(script.contains("HSET"));
+        assertTrue(script.contains("ZADD"));
+        assertTrue(script.contains("PEXPIREAT"));
     }
 
     @Test
@@ -34,6 +36,11 @@ class ArchitectureContractTests {
         assertTrue(release.contains("HDEL"));
         assertTrue(expire.contains("reservedOrderId == ARGV[2]"));
         assertTrue(expire.contains("'closed:' .. ARGV[2]"));
+        assertTrue(release.contains("ZREM"));
+        assertTrue(expire.contains("ZREM"));
+        String ack = resource("lua/seckill_ack.lua");
+        assertTrue(ack.contains("ZREM"));
+        assertTrue(ack.contains("HDEL"));
     }
 
     @Test

@@ -1,4 +1,4 @@
--- KEYS: stock, user->order reservation hash, begin time, end time
+-- KEYS: stock, reservation hash, begin time, end time, pending zset, event hash
 -- ARGV: userId, orderId, currentTimeMillis
 local stock = redis.call('GET', KEYS[1])
 local beginTime = redis.call('GET', KEYS[3])
@@ -24,6 +24,10 @@ end
 
 redis.call('DECR', KEYS[1])
 redis.call('HSET', KEYS[2], ARGV[1], ARGV[2])
+redis.call('ZADD', KEYS[5], ARGV[3], ARGV[2])
+redis.call('HSET', KEYS[6], ARGV[2], ARGV[1] .. '|' .. ARGV[3])
 -- 活动结束后仍保留一天，供异步消费和超时关闭完成幂等校验。
 redis.call('PEXPIREAT', KEYS[2], tonumber(endTime) + 86400000)
+redis.call('PEXPIREAT', KEYS[5], tonumber(endTime) + 86400000)
+redis.call('PEXPIREAT', KEYS[6], tonumber(endTime) + 86400000)
 return 0

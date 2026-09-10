@@ -23,6 +23,11 @@ public class RedisScriptConfig {
         return script("lua/seckill_expire.lua");
     }
 
+    @Bean("seckillAckScript")
+    public DefaultRedisScript<Long> seckillAckScript() {
+        return script("lua/seckill_ack.lua");
+    }
+
     @Bean("rateLimitScript")
     public DefaultRedisScript<Long> rateLimitScript() {
         return script("lua/rate_limit.lua");

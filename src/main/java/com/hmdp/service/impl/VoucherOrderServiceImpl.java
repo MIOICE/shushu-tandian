@@ -61,9 +61,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
 
         VoucherOrderEvent event = new VoucherOrderEvent(orderId, userId, voucherId, System.currentTimeMillis());
-        if (!messagePublisher.publishOrder(event)) {
-            return Result.fail("下单请求繁忙，请稍后重试");
-        }
+        messagePublisher.publishOrder(event);
         return Result.ok(orderId);
     }
 

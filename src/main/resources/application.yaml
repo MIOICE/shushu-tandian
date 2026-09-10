@@ -36,6 +36,9 @@ shushu:
     timeout-minutes: 15
     close-batch-size: 100
     scan-delay-ms: 30000
+    message-retry-delay-ms: 5000
+    message-retry-scan-delay-ms: 5000
+    message-retry-batch-size: 100
   cache:
     local-ttl-minutes: 5
     redis-ttl-minutes: 30

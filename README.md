@@ -5,7 +5,7 @@
 ## 核心链路
 
 - 秒杀：Redis 预扣库存，Lua 在一个原子操作中校验活动时间、库存和一人一券；MySQL 的 `stock > 0` 条件更新与 `(user_id, voucher_id)` 唯一索引提供最终防线。
-- 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者幂等创建订单。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
+- 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者幂等创建订单。预占事件会由同一个 Lua 原子写入 Redis 待投递区，Broker 确认后清理；确认丢失或进程重启时由定时任务重投。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
 - 超时关闭：每 30 秒分批扫描超过 15 分钟的未支付订单，状态条件更新成功后同时回补 MySQL 与 Redis；Redis Lua 会核对订单号，重复执行不会重复回补，并保留一人一券标记。
 - 两级缓存：店铺详情先查 Caffeine，再查 Redis，最后互斥回源 MySQL。更新采用“更新数据库 → 删除缓存 → 提交后再次删除 → RocketMQ 广播补偿 → TTL 兜底”。
 - 风控：`@RiskLimit` + AOP + Redis Lua 实现用户、IP、设备指纹三维滑动窗口，三个维度在同一脚本内原子判断。

@@ -29,25 +29,27 @@ public class ShushuMessagePublisher {
         this.reservationService = reservationService;
     }
 
-    public boolean publishOrder(VoucherOrderEvent event) {
+    public void publishOrder(VoucherOrderEvent event) {
         try {
             rocketMQTemplate.asyncSend(orderTopic + ":seckill", event, new SendCallback() {
                 @Override
                 public void onSuccess(SendResult sendResult) {
                     log.debug("秒杀订单消息已投递, orderId={}, msgId={}", event.getOrderId(), sendResult.getMsgId());
+                    try {
+                        reservationService.acknowledge(event.getVoucherId(), event.getOrderId());
+                    } catch (RuntimeException exception) {
+                        // ACK 丢失只会触发幂等重投，不能回滚已经交给 Broker 的订单。
+                        log.error("清理 Redis 待投递记录失败，将由重投任务兜底, orderId={}", event.getOrderId(), exception);
+                    }
                 }
 
                 @Override
                 public void onException(Throwable throwable) {
-                    log.error("秒杀订单消息异步投递失败，回滚 Redis 预占, orderId={}", event.getOrderId(), throwable);
-                    reservationService.compensate(event.getVoucherId(), event.getUserId(), event.getOrderId());
+                    log.error("秒杀订单消息异步投递失败，保留待投递记录等待重试, orderId={}", event.getOrderId(), throwable);
                 }
             }, 3000);
-            return true;
         } catch (RuntimeException exception) {
-            log.error("秒杀订单消息投递失败，回滚 Redis 预占, orderId={}", event.getOrderId(), exception);
-            reservationService.compensate(event.getVoucherId(), event.getUserId(), event.getOrderId());
-            return false;
+            log.error("秒杀订单消息投递失败，保留待投递记录等待重试, orderId={}", event.getOrderId(), exception);
         }
     }
 
