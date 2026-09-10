@@ -8,7 +8,11 @@ import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
+import com.hmdp.entity.Campus;
+import com.hmdp.entity.UserInfo;
 import com.hmdp.mapper.UserMapper;
+import com.hmdp.service.ICampusService;
+import com.hmdp.service.IUserInfoService;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.UserHolder;
@@ -39,6 +43,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private IUserInfoService userInfoService;
+    @Resource
+    private ICampusService campusService;
     @Override
     public Result sendCode(String phone, HttpSession session) {
         //1.校验手机号
@@ -88,6 +96,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String token = UUID.randomUUID().toString();
         //7.2将User对象转为HashMap存储
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        UserInfo userInfo = userInfoService.getById(user.getId());
+        if (userInfo != null) {
+            userDTO.setCampusId(userInfo.getCampusId());
+        }
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO,new HashMap<>(),
                 CopyOptions.create()
                         .setIgnoreNullValue(true)
@@ -118,6 +130,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         stringRedisTemplate.delete(LOGIN_USER_KEY + token.trim());
         UserHolder.removeUser();
         return Result.ok();
+    }
+
+    @Override
+    public Result selectCampus(Long campusId, String token) {
+        if (UserHolder.getUser() == null) {
+            return Result.fail("请先登录");
+        }
+        Campus campus = campusService.getById(campusId);
+        if (campus == null || !Integer.valueOf(1).equals(campus.getStatus())) {
+            return Result.fail("校区不存在或已停用");
+        }
+        Long userId = UserHolder.getUser().getId();
+        UserInfo info = userInfoService.getById(userId);
+        if (info == null) {
+            info = new UserInfo().setUserId(userId).setCampusId(campusId);
+            userInfoService.save(info);
+        } else {
+            userInfoService.update().set("campus_id", campusId).eq("user_id", userId).update();
+        }
+        UserHolder.getUser().setCampusId(campusId);
+        if (token != null && !token.trim().isEmpty()) {
+            stringRedisTemplate.opsForHash().put(
+                    LOGIN_USER_KEY + token.trim(), "campusId", campusId.toString());
+        }
+        return Result.ok(campus);
     }
 
 }

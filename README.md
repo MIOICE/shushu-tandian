@@ -12,6 +12,7 @@
 - 两级缓存：店铺详情先查 Caffeine，再查 Redis，最后互斥回源 MySQL。更新采用“更新数据库 → 删除缓存 → 提交后再次删除 → RocketMQ 广播补偿 → TTL 兜底”。
 - 风控：`@RiskLimit` + AOP + Redis Lua 实现用户、IP、设备指纹三维滑动窗口，三个维度在同一脚本内原子判断。
 - 校园发现：店铺绑定大学校区并携带学生优惠与场景标签，列表支持按校园热度、评分和价格分页排序；排序参数通过枚举白名单转换，不直接进入 SQL。
+- 学生认证：学号以服务端盐值加 SHA-256 后存储，申请由运营凭证审核；学生专享券使用本地券策略缓存和 Redis 认证缓存校验，审核结果会主动失效共享缓存。
 
 ## 快速启动
 
@@ -24,7 +25,7 @@ mvn spring-boot:run
 
 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、RocketMQ NameServer `9876`、Broker `10911`。配置均可用 [.env.example](./.env.example) 中的环境变量覆盖。
 
-如需启用支付平台回调，必须设置随机的 `PAYMENT_CALLBACK_TOKEN`；未设置时公开回调接口会拒绝所有请求，本人登录后的模拟支付接口不受影响。
+支付回调、运营接口和学生身份摘要分别使用 `PAYMENT_CALLBACK_TOKEN`、`OPS_TOKEN` 和 `STUDENT_ID_SALT`。三者都应设置为不同的高强度随机值；未配置时对应的敏感操作会被拒绝。
 
 首次创建的 MySQL 数据卷会自动导入 `src/main/resources/db/hmdp.sql`。若使用已经导入旧版脚本的数据库，需要手动执行一次：
 
@@ -44,12 +45,18 @@ mysql -uroot -p hmdp < src/main/resources/db/shushu_order_v2.sql
 mysql -uroot -p hmdp < src/main/resources/db/shushu_campus_v3.sql
 ```
 
+学生身份认证与学生专享券升级继续执行：
+
+```bash
+mysql -uroot -p hmdp < src/main/resources/db/shushu_student_v4.sql
+```
+
 新增秒杀券示例（开始和结束时间需改成当前有效时间）：
 
 ```bash
 curl -X POST http://localhost:8081/voucher/seckill \
   -H "Content-Type: application/json" \
-  -d '{"shopId":1,"title":"校园夜宵5折券","subTitle":"学生专享","rules":"每人限购一份","payValue":500,"actualValue":1000,"type":1,"status":1,"stock":5,"beginTime":"2026-09-10T09:00:00","endTime":"2026-09-10T23:00:00"}'
+  -d '{"shopId":1,"campusId":2,"studentOnly":1,"title":"校园夜宵5折券","subTitle":"学生专享","rules":"每人限购一份","payValue":500,"actualValue":1000,"type":1,"status":1,"stock":5,"beginTime":"2026-09-10T09:00:00","endTime":"2026-09-10T23:00:00"}'
 ```
 
 登录沿用验证码流程：调用 `POST /user/code?phone=手机号`，从开发日志取得验证码，再调用 `POST /user/login` 获取 token。生产环境应替换日志验证码为真实短信服务。
@@ -110,7 +117,12 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | GET | `/campus?city=杭州市` | 查询已启用校区，城市参数可选 |
 | GET | `/campus/{id}` | 查询校区详情 |
 | GET | `/shop/of/campus?campusId=2&studentOnly=true&sort=hot&current=1` | 按校区发现学生优惠店铺；排序支持 `hot`、`score`、`price` |
-| GET | `/ops/stock/reconciliation` | 查询最近一次库存对账结果（需登录） |
+| PUT | `/user/campus/{campusId}` | 设置当前用户的默认校区 |
+| POST | `/student-verification` | 提交学生认证，参数为 `campusId`、`studentNo` |
+| GET | `/student-verification/me` | 查询本人的学生认证状态 |
+| GET | `/ops/student-verifications` | 登录并携带 `X-Ops-Token` 查询待审核认证 |
+| POST | `/ops/student-verifications/{id}/review` | 登录并携带 `X-Ops-Token` 审核认证，参数为 `approved`、`rejectReason` |
+| GET | `/ops/stock/reconciliation` | 登录并携带 `X-Ops-Token` 查询最近一次库存对账结果 |
 
 ## 构建验证
 
@@ -118,4 +130,4 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 mvn clean test
 ```
 
-数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql) 和 [shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)。
+数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql) 和 [shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql)。

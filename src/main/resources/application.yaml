@@ -27,6 +27,10 @@ rocketmq:
     send-message-timeout: 3000
     retry-times-when-send-failed: 2
 shushu:
+  ops:
+    token: ${OPS_TOKEN:}
+  student:
+    id-salt: ${STUDENT_ID_SALT:}
   payment:
     callback-token: ${PAYMENT_CALLBACK_TOKEN:}
   risk:

@@ -39,6 +39,16 @@ public class Voucher implements Serializable {
     private Long shopId;
 
     /**
+     * 适用校区；为空表示不限制校区。
+     */
+    private Long campusId;
+
+    /**
+     * 是否仅限已认证学生领取：1 是，0 否。
+     */
+    private Integer studentOnly;
+
+    /**
      * 代金券标题
      */
     private String title;

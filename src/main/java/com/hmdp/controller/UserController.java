@@ -69,6 +69,12 @@ public class UserController {
         return Result.ok(user);
     }
 
+    @PutMapping("/campus/{campusId}")
+    public Result selectCampus(@PathVariable("campusId") Long campusId,
+                               @RequestHeader(value = "Authorization", required = false) String token) {
+        return userService.selectCampus(campusId, token);
+    }
+
     @GetMapping("/info/{id}")
     public Result info(@PathVariable("id") Long userId){
         // 查询详情

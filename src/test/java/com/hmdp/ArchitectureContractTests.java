@@ -3,8 +3,13 @@ package com.hmdp;
 import com.hmdp.cache.ShopCacheMetrics;
 import com.hmdp.controller.VoucherOrderController;
 import com.hmdp.enums.ShopCampusSort;
+import com.hmdp.entity.StudentVerification;
+import com.hmdp.entity.Voucher;
+import com.hmdp.enums.StudentVerificationStatus;
 import com.hmdp.risk.RiskLimit;
 import com.hmdp.enums.VoucherOrderStatus;
+import com.hmdp.service.StudentEligibilityPolicy;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
@@ -95,6 +100,38 @@ class ArchitectureContractTests {
         assertEquals(ShopCampusSort.HOT, ShopCampusSort.parse("unknown-column"));
         assertEquals(ShopCampusSort.SCORE, ShopCampusSort.parse("score"));
         assertEquals(ShopCampusSort.PRICE, ShopCampusSort.parse(" PRICE "));
+    }
+
+    @Test
+    void studentOnlyVoucherRequiresVerifiedStudentFromMatchingCampus() {
+        Voucher ordinary = new Voucher().setStudentOnly(0);
+        assertEquals(null, StudentEligibilityPolicy.validate(ordinary, null));
+
+        Voucher studentOnly = new Voucher().setStudentOnly(1).setCampusId(2L);
+        assertEquals("该优惠仅限已认证大学生领取",
+                StudentEligibilityPolicy.validate(studentOnly, null));
+
+        StudentVerification wrongCampus = new StudentVerification()
+                .setStatus(StudentVerificationStatus.VERIFIED.getCode())
+                .setCampusId(1L);
+        assertEquals("该优惠仅限指定校区的认证学生领取",
+                StudentEligibilityPolicy.validate(studentOnly, wrongCampus));
+
+        StudentVerification eligible = new StudentVerification()
+                .setStatus(StudentVerificationStatus.VERIFIED.getCode())
+                .setCampusId(2L);
+        assertEquals(null, StudentEligibilityPolicy.validate(studentOnly, eligible));
+    }
+
+    @Test
+    void studentVerificationSchemaProtectsIdentityAndReviewQueue() throws Exception {
+        String schema = resource("db/hmdp.sql");
+        assertTrue(schema.contains("CREATE TABLE `tb_student_verification`"));
+        assertTrue(schema.contains("UNIQUE KEY `uk_student_user` (`user_id`)"));
+        assertTrue(schema.contains("UNIQUE KEY `uk_campus_student_no` (`campus_id`, `student_no_hash`)"));
+        assertTrue(schema.contains("INDEX `idx_campus_student_status` (`campus_id`, `student_only`, `status`)"));
+        assertTrue(StudentVerification.class.getDeclaredField("studentNoHash")
+                .isAnnotationPresent(JsonIgnore.class));
     }
 
     @Test

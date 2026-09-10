@@ -5,6 +5,7 @@ import com.hmdp.risk.RateLimitExceededException;
 import com.hmdp.risk.UnauthorizedPaymentCallbackException;
 import com.hmdp.risk.InvalidPaymentCallbackException;
 import com.hmdp.risk.PaymentCallbackRetryException;
+import com.hmdp.security.UnauthorizedOpsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.dao.DuplicateKeyException;
@@ -32,12 +33,18 @@ public class WebExceptionAdvice {
     @ExceptionHandler(DuplicateKeyException.class)
     public Result handleDuplicateKeyException(DuplicateKeyException e) {
         log.warn("数据库唯一约束冲突", e);
-        return Result.fail("支付流水号或订单记录已存在");
+        return Result.fail("记录已存在，请勿重复提交");
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(UnauthorizedPaymentCallbackException.class)
     public Result handleUnauthorizedPaymentCallback(UnauthorizedPaymentCallbackException e) {
+        return Result.fail(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(UnauthorizedOpsException.class)
+    public Result handleUnauthorizedOps(UnauthorizedOpsException e) {
         return Result.fail(e.getMessage());
     }
 

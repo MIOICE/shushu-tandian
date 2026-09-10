@@ -1265,6 +1265,7 @@ DROP TABLE IF EXISTS `tb_user_info`;
 CREATE TABLE `tb_user_info`  (
   `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '主键，用户id',
   `city` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '城市名称',
+  `campus_id` bigint(20) UNSIGNED NULL DEFAULT NULL COMMENT '默认大学校区',
   `introduce` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '个人介绍，不要超过128个字符',
   `fans` int(8) UNSIGNED NULL DEFAULT 0 COMMENT '粉丝数量',
   `followee` int(8) UNSIGNED NULL DEFAULT 0 COMMENT '关注的人的数量',
@@ -1280,6 +1281,26 @@ CREATE TABLE `tb_user_info`  (
 -- ----------------------------
 -- Records of tb_user_info
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for tb_student_verification
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_student_verification`;
+CREATE TABLE `tb_student_verification`  (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
+  `campus_id` bigint(20) UNSIGNED NOT NULL COMMENT '学校校区id',
+  `student_no_hash` char(64) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT '加盐后的学号摘要',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待审核，1已认证，2已驳回',
+  `reviewed_at` timestamp NULL DEFAULT NULL COMMENT '审核时间',
+  `reject_reason` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '驳回原因',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_student_user` (`user_id`) USING BTREE,
+  UNIQUE KEY `uk_campus_student_no` (`campus_id`, `student_no_hash`) USING BTREE,
+  INDEX `idx_status_create_time` (`status`, `create_time`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '学生身份认证申请' ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for tb_voucher
@@ -1304,6 +1325,16 @@ CREATE TABLE `tb_voucher`  (
 -- Records of tb_voucher
 -- ----------------------------
 INSERT INTO `tb_voucher` VALUES (1, 1, '50元代金券', '周一至周日均可使用', '全场通用\\n无需预约\\n可无限叠加\\不兑现、不找零\\n仅限堂食', 4750, 5000, 0, 1, '2022-01-04 09:42:39', '2022-01-04 09:43:31');
+
+-- ----------------------------
+-- Student eligibility fields for tb_voucher
+-- ----------------------------
+ALTER TABLE `tb_voucher`
+  ADD COLUMN `campus_id` bigint(20) UNSIGNED NULL DEFAULT NULL COMMENT '适用大学校区' AFTER `shop_id`,
+  ADD COLUMN `student_only` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否仅限认证学生' AFTER `campus_id`,
+  ADD INDEX `idx_campus_student_status` (`campus_id`, `student_only`, `status`) USING BTREE;
+
+UPDATE `tb_voucher` SET `campus_id` = 2 WHERE `id` = 1;
 
 -- ----------------------------
 -- Table structure for tb_voucher_order

@@ -28,4 +28,6 @@ public class RedisConstants {
     public static final String FEED_KEY = "feed:";
     public static final String SHOP_GEO_KEY = "shop:geo:";
     public static final String USER_SIGN_KEY = "sign:";
+    public static final String STUDENT_ELIGIBILITY_KEY = "student:eligibility:";
+    public static final Long STUDENT_ELIGIBILITY_TTL = 30L;
 }

@@ -10,6 +10,7 @@ import com.hmdp.mq.ShushuMessagePublisher;
 import com.hmdp.service.ISeckillVoucherService;
 import com.hmdp.service.IVoucherOrderService;
 import com.hmdp.service.SeckillReservationService;
+import com.hmdp.service.StudentEligibilityService;
 import com.hmdp.utils.RedisIdWorker;
 import com.hmdp.utils.UserHolder;
 import com.hmdp.risk.UnauthorizedPaymentCallbackException;
@@ -45,6 +46,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private final SeckillReservationService reservationService;
     private final ISeckillVoucherService seckillVoucherService;
     private final ShushuMessagePublisher messagePublisher;
+    private final StudentEligibilityService eligibilityService;
 
     @Value("${shushu.payment.callback-token:}")
     private String paymentCallbackToken;
@@ -52,11 +54,13 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     public VoucherOrderServiceImpl(RedisIdWorker redisIdWorker,
                                    SeckillReservationService reservationService,
                                    ISeckillVoucherService seckillVoucherService,
-                                   ShushuMessagePublisher messagePublisher) {
+                                   ShushuMessagePublisher messagePublisher,
+                                   StudentEligibilityService eligibilityService) {
         this.redisIdWorker = redisIdWorker;
         this.reservationService = reservationService;
         this.seckillVoucherService = seckillVoucherService;
         this.messagePublisher = messagePublisher;
+        this.eligibilityService = eligibilityService;
     }
 
     @Override
@@ -65,6 +69,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("请先登录");
         }
         Long userId = UserHolder.getUser().getId();
+        String eligibilityError = eligibilityService.validateClaim(userId, voucherId);
+        if (eligibilityError != null) {
+            return Result.fail(eligibilityError);
+        }
         Long orderId = redisIdWorker.nextId("order");
         long result = reservationService.reserve(voucherId, userId, orderId);
         if (result != 0L) {
