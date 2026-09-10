@@ -100,6 +100,32 @@ CREATE TABLE `tb_seckill_voucher`  (
 -- ----------------------------
 
 -- ----------------------------
+-- Table structure for tb_campus
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_campus`;
+CREATE TABLE `tb_campus`  (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '学校及校区名称',
+  `city` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '所在城市',
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '校区地址',
+  `x` double UNSIGNED NOT NULL COMMENT '经度',
+  `y` double UNSIGNED NOT NULL COMMENT '纬度',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态：1启用，0停用',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_campus_name_city` (`name`, `city`) USING BTREE,
+  INDEX `idx_city_status` (`city`, `status`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '大学校区' ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of tb_campus
+-- ----------------------------
+INSERT INTO `tb_campus` VALUES (1, '浙江大学紫金港校区', '杭州市', '余杭塘路866号', 120.090, 30.305, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `tb_campus` VALUES (2, '浙江工业大学朝晖校区', '杭州市', '潮王路18号', 120.164, 30.287, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `tb_campus` VALUES (3, '杭州师范大学仓前校区', '杭州市', '余杭塘路2318号', 120.016, 30.295, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- ----------------------------
 -- Table structure for tb_shop
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_shop`;
@@ -140,6 +166,26 @@ INSERT INTO `tb_shop` VALUES (11, 'INLOVE KTV(水晶城店)', 2, 'https://p0.mei
 INSERT INTO `tb_shop` VALUES (12, '魅(杭州远洋乐堤港店)', 2, 'https://p0.meituan.net/dpmerchantpic/63833f6ba0393e2e8722420ef33f3d40466664.jpg,https://p0.meituan.net/dpmerchantpic/ae3c94cc92c529c4b1d7f68cebed33fa105810.png,', '远洋乐堤港', '丽水路58号远洋乐堤港F4', 120.14983, 30.31211, 88, 0000006444, 0000000235, 46, '10:00-02:00', '2021-12-22 20:34:34', '2021-12-22 20:34:34');
 INSERT INTO `tb_shop` VALUES (13, '讴K拉量贩KTV(北城天地店)', 2, 'https://p1.meituan.net/merchantpic/598c83a8c0d06fe79ca01056e214d345875600.jpg,https://qcloud.dpfile.com/pc/HhvI0YyocYHRfGwJWqPQr34hRGRl4cWdvlNwn3dqghvi4WXlM2FY1te0-7pE3Wb9_Gd2X_f-v9T8Yj4uLt25Gg.jpg,https://qcloud.dpfile.com/pc/F5ZVzZaXFE27kvQzPnaL4V8O9QCpVw2nkzGrxZE8BqXgkfyTpNExfNG5CEPQX4pjGybIjx5eX6WNgCPvcASYAw.jpg', 'D32天阳购物中心', '湖州街567号北城天地5层', 120.130453, 30.327655, 58, 0000018997, 0000001857, 41, '12:00-02:00', '2021-12-22 20:38:54', '2021-12-22 20:40:04');
 INSERT INTO `tb_shop` VALUES (14, '星聚会KTV(拱墅区万达店)', 2, 'https://p0.meituan.net/dpmerchantpic/f4cd6d8d4eb1959c3ea826aa05a552c01840451.jpg,https://p0.meituan.net/dpmerchantpic/2efc07aed856a8ab0fc75c86f4b9b0061655777.jpg,https://qcloud.dpfile.com/pc/zWfzzIorCohKT0bFwsfAlHuayWjI6DBEMPHHncmz36EEMU9f48PuD9VxLLDAjdoU_Gd2X_f-v9T8Yj4uLt25Gg.jpg', '北部新城', '杭行路666号万达广场C座1-2F', 120.128958, 30.337252, 60, 0000017771, 0000000685, 47, '10:00-22:00', '2021-12-22 20:48:54', '2021-12-22 20:48:54');
+
+-- ----------------------------
+-- Campus fields for tb_shop
+-- ----------------------------
+ALTER TABLE `tb_shop`
+  ADD COLUMN `campus_id` bigint(20) UNSIGNED NULL DEFAULT NULL COMMENT '所属大学校区' AFTER `type_id`,
+  ADD COLUMN `student_discount` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否提供学生优惠' AFTER `campus_id`,
+  ADD COLUMN `tags` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '校园场景标签，逗号分隔' AFTER `student_discount`,
+  ADD INDEX `idx_campus_hot` (`campus_id`, `sold`) USING BTREE,
+  ADD INDEX `idx_campus_score` (`campus_id`, `score`) USING BTREE;
+
+UPDATE `tb_shop`
+SET `campus_id` = 2,
+    `student_discount` = IF(`id` IN (1, 2, 3, 6, 8, 10), 1, 0),
+    `tags` = CASE
+        WHEN `id` IN (1, 3, 6, 8) THEN '校园周边,学生优惠,聚餐'
+        WHEN `id` IN (2, 5, 9) THEN '校园周边,夜宵'
+        WHEN `id` IN (10, 11, 12, 13, 14) THEN '校园周边,团建'
+        ELSE '校园周边'
+    END;
 
 -- ----------------------------
 -- Table structure for tb_shop_type

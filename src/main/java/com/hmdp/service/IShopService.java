@@ -19,4 +19,6 @@ public interface IShopService extends IService<Shop> {
     Result update(Shop shop);
 
     Result cacheStats();
+
+    Result queryByCampus(Long campusId, Integer current, Boolean studentOnly, String sort);
 }

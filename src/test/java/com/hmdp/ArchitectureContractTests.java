@@ -2,6 +2,7 @@ package com.hmdp;
 
 import com.hmdp.cache.ShopCacheMetrics;
 import com.hmdp.controller.VoucherOrderController;
+import com.hmdp.enums.ShopCampusSort;
 import com.hmdp.risk.RiskLimit;
 import com.hmdp.enums.VoucherOrderStatus;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,24 @@ class ArchitectureContractTests {
         assertTrue(schema.contains("INDEX `idx_status_create_time` (`status`, `create_time`)"));
         assertTrue(schema.contains("UNIQUE KEY `uk_pay_no` (`pay_no`)"));
         assertTrue(schema.contains("`close_time` timestamp NULL DEFAULT NULL"));
+    }
+
+    @Test
+    void campusSchemaSupportsDiscoveryAndHotRanking() throws IOException {
+        String schema = resource("db/hmdp.sql");
+        assertTrue(schema.contains("CREATE TABLE `tb_campus`"));
+        assertTrue(schema.contains("`campus_id` bigint(20) UNSIGNED"));
+        assertTrue(schema.contains("`student_discount` tinyint(1) UNSIGNED"));
+        assertTrue(schema.contains("INDEX `idx_campus_hot` (`campus_id`, `sold`)"));
+        assertTrue(schema.contains("INDEX `idx_campus_score` (`campus_id`, `score`)"));
+    }
+
+    @Test
+    void campusSortUsesOnlyKnownValuesAndDefaultsToHot() {
+        assertEquals(ShopCampusSort.HOT, ShopCampusSort.parse(null));
+        assertEquals(ShopCampusSort.HOT, ShopCampusSort.parse("unknown-column"));
+        assertEquals(ShopCampusSort.SCORE, ShopCampusSort.parse("score"));
+        assertEquals(ShopCampusSort.PRICE, ShopCampusSort.parse(" PRICE "));
     }
 
     @Test

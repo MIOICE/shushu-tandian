@@ -45,6 +45,19 @@ public class ShopController {
     }
 
     /**
+     * 按校区发现店铺，支持校园热度、评分和价格排序。
+     */
+    @GetMapping("/of/campus")
+    public Result queryShopByCampus(
+            @RequestParam("campusId") Long campusId,
+            @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value = "studentOnly", defaultValue = "false") Boolean studentOnly,
+            @RequestParam(value = "sort", defaultValue = "hot") String sort
+    ) {
+        return shopService.queryByCampus(campusId, current, studentOnly, sort);
+    }
+
+    /**
      * 新增商铺信息
      * @param shop 商铺数据
      * @return 商铺id

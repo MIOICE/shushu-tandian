@@ -44,6 +44,21 @@ public class Shop implements Serializable {
     private Long typeId;
 
     /**
+     * 所属大学校区。
+     */
+    private Long campusId;
+
+    /**
+     * 是否提供学生优惠：1 是，0 否。
+     */
+    private Integer studentDiscount;
+
+    /**
+     * 逗号分隔的校园场景标签。
+     */
+    private String tags;
+
+    /**
      * 商铺图片，多个图片以','隔开
      */
     private String images;
@@ -106,4 +121,7 @@ public class Shop implements Serializable {
 
     @TableField(exist = false)
     private Double distance;
+
+    @TableField(exist = false)
+    private String campusName;
 }

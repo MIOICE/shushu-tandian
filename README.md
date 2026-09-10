@@ -1,6 +1,6 @@
 # 鼠鼠探店
 
-鼠鼠探店是一款面向大学生的校园生活与优惠发现后端，提供探店笔记、店铺检索、关注 Feed、优惠券秒杀和订单能力。项目基于 Spring Boot 2.3、MyBatis-Plus、MySQL、Redis、Caffeine 与 RocketMQ。
+鼠鼠探店是一款面向大学生的校园生活与优惠发现后端，提供校区选择、学生优惠店铺发现、探店笔记、关注 Feed、优惠券秒杀和订单能力。项目基于 Spring Boot 2.3、MyBatis-Plus、MySQL、Redis、Caffeine 与 RocketMQ。
 
 ## 核心链路
 
@@ -11,6 +11,7 @@
 - 库存对账：定时比较 MySQL、Redis 与待投递消息数量，正常异步差值标记为 `CONSISTENT`，异常差值标记为 `CHECK_REQUIRED` 并告警。
 - 两级缓存：店铺详情先查 Caffeine，再查 Redis，最后互斥回源 MySQL。更新采用“更新数据库 → 删除缓存 → 提交后再次删除 → RocketMQ 广播补偿 → TTL 兜底”。
 - 风控：`@RiskLimit` + AOP + Redis Lua 实现用户、IP、设备指纹三维滑动窗口，三个维度在同一脚本内原子判断。
+- 校园发现：店铺绑定大学校区并携带学生优惠与场景标签，列表支持按校园热度、评分和价格分页排序；排序参数通过枚举白名单转换，不直接进入 SQL。
 
 ## 快速启动
 
@@ -35,6 +36,12 @@ mysql -uroot -p hmdp < src/main/resources/db/shushu_upgrade.sql
 
 ```bash
 mysql -uroot -p hmdp < src/main/resources/db/shushu_order_v2.sql
+```
+
+若数据库还需要加入校区、学生优惠和校园标签，继续执行一次：
+
+```bash
+mysql -uroot -p hmdp < src/main/resources/db/shushu_campus_v3.sql
 ```
 
 新增秒杀券示例（开始和结束时间需改成当前有效时间）：
@@ -100,6 +107,9 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | GET | `/shop/{id}` | 两级缓存查询店铺 |
 | PUT | `/shop` | 更新店铺并触发缓存一致性链路 |
 | GET | `/shop/cache/stats` | 查询缓存命中与回源统计 |
+| GET | `/campus?city=杭州市` | 查询已启用校区，城市参数可选 |
+| GET | `/campus/{id}` | 查询校区详情 |
+| GET | `/shop/of/campus?campusId=2&studentOnly=true&sort=hot&current=1` | 按校区发现学生优惠店铺；排序支持 `hot`、`score`、`price` |
 | GET | `/ops/stock/reconciliation` | 查询最近一次库存对账结果（需登录） |
 
 ## 构建验证
@@ -108,4 +118,4 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 mvn clean test
 ```
 
-数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库升级脚本位于 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)。
+数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql) 和 [shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)。
