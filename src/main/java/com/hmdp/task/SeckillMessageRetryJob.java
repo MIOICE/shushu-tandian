@@ -48,6 +48,7 @@ public class SeckillMessageRetryJob {
             List<VoucherOrderEvent> events = reservationService.findPendingEvents(
                     voucher.getVoucherId(), acceptedBefore, batchSize);
             for (VoucherOrderEvent event : events) {
+                // 待处理记录直到消费者完成数据库事务后才删除，因此这里同时覆盖发送失败和消费失败。
                 messagePublisher.publishOrder(event);
                 retried++;
             }

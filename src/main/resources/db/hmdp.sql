@@ -32,7 +32,10 @@ CREATE TABLE `tb_blog`  (
   `comments` int(8) UNSIGNED NULL DEFAULT NULL COMMENT '评论数量',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_blog_hot` (`liked`, `create_time`) USING BTREE,
+  INDEX `idx_blog_user_time` (`user_id`, `create_time`) USING BTREE,
+  INDEX `idx_blog_shop_time` (`shop_id`, `create_time`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
@@ -54,16 +57,32 @@ CREATE TABLE `tb_blog_comments`  (
   `parent_id` bigint(20) UNSIGNED NOT NULL COMMENT '关联的1级评论id，如果是一级评论，则值为0',
   `answer_id` bigint(20) UNSIGNED NOT NULL COMMENT '回复的评论id',
   `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '回复的内容',
-  `liked` int(8) UNSIGNED NULL DEFAULT NULL COMMENT '点赞数',
-  `status` tinyint(1) UNSIGNED NULL DEFAULT NULL COMMENT '状态，0：正常，1：被举报，2：禁止查看',
+  `liked` int(8) UNSIGNED NOT NULL DEFAULT 0 COMMENT '点赞数',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '状态，0：正常，1：被举报，2：禁止查看',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_comment_blog_status_time` (`blog_id`, `status`, `create_time`) USING BTREE,
+  INDEX `idx_comment_parent` (`parent_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Records of tb_blog_comments
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for tb_blog_like
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_blog_like`;
+CREATE TABLE `tb_blog_like`  (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `blog_id` bigint(20) UNSIGNED NOT NULL COMMENT '探店笔记id',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '点赞用户id',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '点赞时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_blog_user` (`blog_id`, `user_id`) USING BTREE,
+  INDEX `idx_blog_time` (`blog_id`, `create_time`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '探店笔记点赞关系' ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for tb_follow
@@ -74,7 +93,9 @@ CREATE TABLE `tb_follow`  (
   `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
   `follow_user_id` bigint(20) UNSIGNED NOT NULL COMMENT '关联的用户id',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_user_follow` (`user_id`, `follow_user_id`) USING BTREE,
+  INDEX `idx_follow_user` (`follow_user_id`, `user_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------

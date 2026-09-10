@@ -5,7 +5,10 @@ import com.hmdp.dto.Result;
 import com.hmdp.entity.Voucher;
 import com.hmdp.mapper.VoucherMapper;
 import com.hmdp.entity.SeckillVoucher;
+import com.hmdp.entity.Campus;
 import com.hmdp.service.ISeckillVoucherService;
+import com.hmdp.service.ICampusService;
+import com.hmdp.service.IShopService;
 import com.hmdp.service.IVoucherService;
 import com.hmdp.service.SeckillReservationService;
 import com.hmdp.service.StudentEligibilityService;
@@ -37,6 +40,12 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     @Resource
     private StudentEligibilityService eligibilityService;
 
+    @Resource
+    private IShopService shopService;
+
+    @Resource
+    private ICampusService campusService;
+
     @Override
     public Result queryVoucherOfShop(Long shopId) {
         // 查询优惠券信息
@@ -46,8 +55,31 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     }
 
     @Override
+    public Result addVoucher(Voucher voucher) {
+        String error = validateVoucher(voucher, false);
+        if (error != null) {
+            return Result.fail(error);
+        }
+        voucher.setType(0);
+        if (voucher.getStatus() == null) {
+            voucher.setStatus(1);
+        }
+        save(voucher);
+        eligibilityService.invalidateVoucher(voucher.getId());
+        return Result.ok(voucher.getId());
+    }
+
+    @Override
     @Transactional
-    public void addSeckillVoucher(Voucher voucher) {
+    public Result addSeckillVoucher(Voucher voucher) {
+        String error = validateVoucher(voucher, true);
+        if (error != null) {
+            return Result.fail(error);
+        }
+        voucher.setType(1);
+        if (voucher.getStatus() == null) {
+            voucher.setStatus(1);
+        }
         // 保存优惠券
         save(voucher);
         // 保存秒杀信息
@@ -64,5 +96,31 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 reservationService.initialize(seckillVoucher, true);
             }
         });
+        return Result.ok(voucher.getId());
+    }
+
+    private String validateVoucher(Voucher voucher, boolean seckill) {
+        if (voucher == null || voucher.getShopId() == null || shopService.getById(voucher.getShopId()) == null) {
+            return "关联店铺不存在";
+        }
+        if (voucher.getTitle() == null || voucher.getTitle().trim().isEmpty()
+                || voucher.getPayValue() == null || voucher.getActualValue() == null
+                || voucher.getPayValue() < 0 || voucher.getActualValue() <= 0
+                || voucher.getPayValue() > voucher.getActualValue()) {
+            return "优惠券标题或金额配置不合法";
+        }
+        if (Integer.valueOf(1).equals(voucher.getStudentOnly())) {
+            Campus campus = voucher.getCampusId() == null ? null : campusService.getById(voucher.getCampusId());
+            if (campus == null || !Integer.valueOf(1).equals(campus.getStatus())) {
+                return "学生专享券必须绑定有效校区";
+            }
+        }
+        if (seckill && (voucher.getStock() == null || voucher.getStock() <= 0
+                || voucher.getBeginTime() == null || voucher.getEndTime() == null
+                || !voucher.getBeginTime().isBefore(voucher.getEndTime())
+                || !voucher.getEndTime().isAfter(java.time.LocalDateTime.now()))) {
+            return "秒杀库存或活动时间不合法";
+        }
+        return null;
     }
 }

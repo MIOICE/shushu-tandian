@@ -2,7 +2,6 @@ package com.hmdp.mq;
 
 import com.hmdp.event.CacheInvalidationEvent;
 import com.hmdp.event.VoucherOrderEvent;
-import com.hmdp.service.SeckillReservationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 public class ShushuMessagePublisher {
 
     private final RocketMQTemplate rocketMQTemplate;
-    private final SeckillReservationService reservationService;
 
     @Value("${shushu.mq.order-topic:shushu-order-topic}")
     private String orderTopic;
@@ -23,10 +21,8 @@ public class ShushuMessagePublisher {
     @Value("${shushu.mq.cache-topic:shushu-cache-topic}")
     private String cacheTopic;
 
-    public ShushuMessagePublisher(RocketMQTemplate rocketMQTemplate,
-                                  SeckillReservationService reservationService) {
+    public ShushuMessagePublisher(RocketMQTemplate rocketMQTemplate) {
         this.rocketMQTemplate = rocketMQTemplate;
-        this.reservationService = reservationService;
     }
 
     public void publishOrder(VoucherOrderEvent event) {
@@ -35,12 +31,6 @@ public class ShushuMessagePublisher {
                 @Override
                 public void onSuccess(SendResult sendResult) {
                     log.debug("秒杀订单消息已投递, orderId={}, msgId={}", event.getOrderId(), sendResult.getMsgId());
-                    try {
-                        reservationService.acknowledge(event.getVoucherId(), event.getOrderId());
-                    } catch (RuntimeException exception) {
-                        // ACK 丢失只会触发幂等重投，不能回滚已经交给 Broker 的订单。
-                        log.error("清理 Redis 待投递记录失败，将由重投任务兜底, orderId={}", event.getOrderId(), exception);
-                    }
                 }
 
                 @Override

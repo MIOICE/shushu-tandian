@@ -35,3 +35,6 @@ build/
 ### Performance output ###
 performance/*.jtl
 performance/report/
+
+### Runtime uploads ###
+uploads/

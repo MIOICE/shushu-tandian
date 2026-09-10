@@ -20,6 +20,10 @@ spring:
         time-between-eviction-runs: 10s
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:localhost:9876}
   producer:
@@ -27,6 +31,8 @@ rocketmq:
     send-message-timeout: 3000
     retry-times-when-send-failed: 2
 shushu:
+  upload:
+    directory: ${UPLOAD_DIR:./uploads}
   ops:
     token: ${OPS_TOKEN:}
   student:

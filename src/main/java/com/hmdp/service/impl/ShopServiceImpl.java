@@ -40,11 +40,39 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     @Override
+    public Result create(Shop shop) {
+        String error = validateShop(shop);
+        if (error != null) {
+            return Result.fail(error);
+        }
+        if (shop.getStudentDiscount() == null) {
+            shop.setStudentDiscount(0);
+        }
+        if (shop.getSold() == null) {
+            shop.setSold(0);
+        }
+        if (shop.getComments() == null) {
+            shop.setComments(0);
+        }
+        if (shop.getScore() == null) {
+            shop.setScore(0);
+        }
+        save(shop);
+        return Result.ok(shop.getId());
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Result update(Shop shop) {
         Long id = shop.getId();
         if (id == null) {
             return Result.fail("店铺 id 不能为空");
+        }
+        if (shop.getCampusId() != null) {
+            Campus campus = campusService.getById(shop.getCampusId());
+            if (campus == null || !Integer.valueOf(1).equals(campus.getStatus())) {
+                return Result.fail("校区不存在或已停用");
+            }
         }
         if (!updateById(shop)) {
             return Result.fail("店铺不存在或更新失败");
@@ -95,5 +123,22 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Page<Shop> page = page(new Page<>(pageNumber, SystemConstants.DEFAULT_PAGE_SIZE), wrapper);
         page.getRecords().forEach(shop -> shop.setCampusName(campus.getName()));
         return Result.ok(page.getRecords());
+    }
+
+    private String validateShop(Shop shop) {
+        if (shop == null || shop.getName() == null || shop.getName().trim().isEmpty()
+                || shop.getName().length() > 128 || shop.getTypeId() == null
+                || shop.getImages() == null || shop.getImages().trim().isEmpty()
+                || shop.getAddress() == null || shop.getAddress().trim().isEmpty()
+                || shop.getX() == null || shop.getY() == null) {
+            return "店铺名称、类型、图片、地址和坐标不能为空";
+        }
+        if (shop.getCampusId() != null) {
+            Campus campus = campusService.getById(shop.getCampusId());
+            if (campus == null || !Integer.valueOf(1).equals(campus.getStatus())) {
+                return "校区不存在或已停用";
+            }
+        }
+        return null;
     }
 }

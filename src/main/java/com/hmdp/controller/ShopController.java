@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.service.IShopService;
+import com.hmdp.security.OpsAuthorizer;
 import com.hmdp.utils.SystemConstants;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,8 @@ public class ShopController {
 
     @Resource
     public IShopService shopService;
+    @Resource
+    private OpsAuthorizer opsAuthorizer;
 
     /**
      * 根据id查询商铺信息
@@ -63,11 +66,11 @@ public class ShopController {
      * @return 商铺id
      */
     @PostMapping
-    public Result saveShop(@RequestBody Shop shop) {
-        // 写入数据库
-        shopService.save(shop);
-        // 返回店铺id
-        return Result.ok(shop.getId());
+    public Result saveShop(
+            @RequestHeader(value = "X-Ops-Token", required = false) String opsToken,
+            @RequestBody Shop shop) {
+        opsAuthorizer.requireAuthorized(opsToken);
+        return shopService.create(shop);
     }
 
     /**
@@ -76,7 +79,10 @@ public class ShopController {
      * @return 无
      */
     @PutMapping
-    public Result updateShop(@RequestBody Shop shop) {
+    public Result updateShop(
+            @RequestHeader(value = "X-Ops-Token", required = false) String opsToken,
+            @RequestBody Shop shop) {
+        opsAuthorizer.requireAuthorized(opsToken);
         // 写入数据库
 
         return shopService.update(shop);
@@ -94,9 +100,10 @@ public class ShopController {
             @RequestParam(value = "current", defaultValue = "1") Integer current
     ) {
         // 根据类型分页查询
+        int pageNumber = current == null || current < 1 ? 1 : current;
         Page<Shop> page = shopService.query()
                 .eq("type_id", typeId)
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
+                .page(new Page<>(pageNumber, SystemConstants.DEFAULT_PAGE_SIZE));
         // 返回数据
         return Result.ok(page.getRecords());
     }
@@ -113,9 +120,10 @@ public class ShopController {
             @RequestParam(value = "current", defaultValue = "1") Integer current
     ) {
         // 根据类型分页查询
+        int pageNumber = current == null || current < 1 ? 1 : current;
         Page<Shop> page = shopService.query()
                 .like(StrUtil.isNotBlank(name), "name", name)
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+                .page(new Page<>(pageNumber, SystemConstants.MAX_PAGE_SIZE));
         // 返回数据
         return Result.ok(page.getRecords());
     }

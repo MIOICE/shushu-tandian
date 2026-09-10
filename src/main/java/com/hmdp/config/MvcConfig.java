@@ -5,15 +5,20 @@ import com.hmdp.utils.RefreshTokenInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Value;
+import java.nio.file.Paths;
 
 
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Value("${shushu.upload.directory:./uploads}")
+    private String uploadDirectory;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         //登录拦截器
@@ -22,7 +27,7 @@ public class MvcConfig implements WebMvcConfigurer {
                       "/shop/**",
                       "/campus/**",
                       "/shop-type/**",
-                      "/upload/**",
+                      "/uploads/**",
                       "/voucher/**",
                       "/blog/hot",
                       "/user/code",
@@ -35,5 +40,14 @@ public class MvcConfig implements WebMvcConfigurer {
 
 
 
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String location = Paths.get(uploadDirectory).toAbsolutePath().normalize().toUri().toString();
+        if (!location.endsWith("/")) {
+            location = location + "/";
+        }
+        registry.addResourceHandler("/uploads/**").addResourceLocations(location);
     }
 }

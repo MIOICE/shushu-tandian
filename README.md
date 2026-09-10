@@ -5,7 +5,7 @@
 ## 核心链路
 
 - 秒杀：Redis 预扣库存，Lua 在一个原子操作中校验活动时间、库存和一人一券；MySQL 的 `stock > 0` 条件更新与 `(user_id, voucher_id)` 唯一索引提供最终防线。
-- 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者幂等创建订单。预占事件会由同一个 Lua 原子写入 Redis 待投递区，Broker 确认后清理；确认丢失或进程重启时由定时任务重投。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
+- 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者幂等创建订单。预占事件会由同一个 Lua 原子写入 Redis 待处理区，只有消费者成功完成数据库事务后才清理；发送失败、消费失败、确认丢失或进程重启均由定时任务重投。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
 - 超时关闭：每 30 秒分批扫描超过 15 分钟的未支付订单，状态条件更新成功后同时回补 MySQL 与 Redis；Redis Lua 会核对订单号，重复执行不会重复回补，并保留一人一券标记。
 - 订单状态：支付回调凭证校验、支付流水唯一索引和条件更新共同保证幂等；支付与超时关单并发时只有一个状态迁移能够成功。
 - 库存对账：定时比较 MySQL、Redis 与待投递消息数量，正常异步差值标记为 `CONSISTENT`，异常差值标记为 `CHECK_REQUIRED` 并告警。
@@ -13,6 +13,8 @@
 - 风控：`@RiskLimit` + AOP + Redis Lua 实现用户、IP、设备指纹三维滑动窗口，三个维度在同一脚本内原子判断。
 - 校园发现：店铺绑定大学校区并携带学生优惠与场景标签，列表支持按校园热度、评分和价格分页排序；排序参数通过枚举白名单转换，不直接进入 SQL。
 - 学生认证：学号以服务端盐值加 SHA-256 后存储，申请由运营凭证审核；学生专享券使用本地券策略缓存和 Redis 认证缓存校验，审核结果会主动失效共享缓存。
+- 点评社区：笔记发布后写入关注者 Redis Feed，支持滚动分页；点赞和关注关系由 MySQL 唯一索引保证幂等，评论支持回复、分页与作者软删除。
+- 文件安全：上传目录通过 `UPLOAD_DIR` 配置，限制 5MB 与图片扩展名/MIME/文件头，路径归一化阻断目录穿越；删除操作仅允许运营凭证调用。
 
 ## 快速启动
 
@@ -51,11 +53,18 @@ mysql -uroot -p hmdp < src/main/resources/db/shushu_campus_v3.sql
 mysql -uroot -p hmdp < src/main/resources/db/shushu_student_v4.sql
 ```
 
+点评、关注 Feed、评论和幂等点赞升级继续执行：
+
+```bash
+mysql -uroot -p hmdp < src/main/resources/db/shushu_social_v5.sql
+```
+
 新增秒杀券示例（开始和结束时间需改成当前有效时间）：
 
 ```bash
 curl -X POST http://localhost:8081/voucher/seckill \
   -H "Content-Type: application/json" \
+  -H "X-Ops-Token: $OPS_TOKEN" \
   -d '{"shopId":1,"campusId":2,"studentOnly":1,"title":"校园夜宵5折券","subTitle":"学生专享","rules":"每人限购一份","payValue":500,"actualValue":1000,"type":1,"status":1,"stock":5,"beginTime":"2026-09-10T09:00:00","endTime":"2026-09-10T23:00:00"}'
 ```
 
@@ -112,7 +121,7 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | POST | `/voucher-order/{orderId}/pay` | 支付未关闭订单 |
 | POST | `/voucher-order/payment/callback` | 携带 `X-Payment-Callback-Token` 的幂等支付回调；订单尚未落库时返回 503 以提示重试 |
 | GET | `/shop/{id}` | 两级缓存查询店铺 |
-| PUT | `/shop` | 更新店铺并触发缓存一致性链路 |
+| POST / PUT | `/shop` | 携带 `X-Ops-Token` 新增或更新店铺，并触发缓存一致性链路 |
 | GET | `/shop/cache/stats` | 查询缓存命中与回源统计 |
 | GET | `/campus?city=杭州市` | 查询已启用校区，城市参数可选 |
 | GET | `/campus/{id}` | 查询校区详情 |
@@ -120,6 +129,16 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | PUT | `/user/campus/{campusId}` | 设置当前用户的默认校区 |
 | POST | `/student-verification` | 提交学生认证，参数为 `campusId`、`studentNo` |
 | GET | `/student-verification/me` | 查询本人的学生认证状态 |
+| POST | `/blog` | 发布探店笔记并扇出到关注者 Feed |
+| GET | `/blog/{id}` | 查询笔记详情与本人点赞状态 |
+| PUT | `/blog/like/{id}` | 幂等切换点赞状态 |
+| GET | `/blog/of/follow?lastId=时间戳&offset=0` | 滚动分页查询关注 Feed |
+| PUT | `/follow/{userId}/{followed}` | 关注或取消关注用户 |
+| POST | `/blog-comments` | 发布一级评论或通过 `answerId` 回复评论 |
+| GET | `/blog-comments/blog/{blogId}` | 分页查询笔记评论 |
+| DELETE | `/blog-comments/{id}` | 作者软删除评论 |
+| POST | `/upload/blog` | 登录后上传不超过 5MB 的图片 |
+| DELETE | `/upload/blog?name=...` | 登录并携带 `X-Ops-Token` 删除上传图片 |
 | GET | `/ops/student-verifications` | 登录并携带 `X-Ops-Token` 查询待审核认证 |
 | POST | `/ops/student-verifications/{id}/review` | 登录并携带 `X-Ops-Token` 审核认证，参数为 `approved`、`rejectReason` |
 | GET | `/ops/stock/reconciliation` | 登录并携带 `X-Ops-Token` 查询最近一次库存对账结果 |
@@ -130,4 +149,4 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 mvn clean test
 ```
 
-数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql) 和 [shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql)。
+数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)、[shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql) 和 [shushu_social_v5.sql](./src/main/resources/db/shushu_social_v5.sql)。

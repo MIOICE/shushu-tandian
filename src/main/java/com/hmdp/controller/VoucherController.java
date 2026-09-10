@@ -4,6 +4,7 @@ package com.hmdp.controller;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Voucher;
 import com.hmdp.service.IVoucherService;
+import com.hmdp.security.OpsAuthorizer;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -22,6 +23,8 @@ public class VoucherController {
 
     @Resource
     private IVoucherService voucherService;
+    @Resource
+    private OpsAuthorizer opsAuthorizer;
 
     /**
      * 新增普通券
@@ -29,9 +32,11 @@ public class VoucherController {
      * @return 优惠券id
      */
     @PostMapping
-    public Result addVoucher(@RequestBody Voucher voucher) {
-        voucherService.save(voucher);
-        return Result.ok(voucher.getId());
+    public Result addVoucher(
+            @RequestHeader(value = "X-Ops-Token", required = false) String opsToken,
+            @RequestBody Voucher voucher) {
+        opsAuthorizer.requireAuthorized(opsToken);
+        return voucherService.addVoucher(voucher);
     }
 
     /**
@@ -40,9 +45,11 @@ public class VoucherController {
      * @return 优惠券id
      */
     @PostMapping("seckill")
-    public Result addSeckillVoucher(@RequestBody Voucher voucher) {
-        voucherService.addSeckillVoucher(voucher);
-        return Result.ok(voucher.getId());
+    public Result addSeckillVoucher(
+            @RequestHeader(value = "X-Ops-Token", required = false) String opsToken,
+            @RequestBody Voucher voucher) {
+        opsAuthorizer.requireAuthorized(opsToken);
+        return voucherService.addSeckillVoucher(voucher);
     }
 
     /**

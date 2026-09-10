@@ -54,6 +54,7 @@ public class WebExceptionAdvice {
         return Result.fail(e.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(RuntimeException.class)
     public Result handleRuntimeException(RuntimeException e) {
         log.error(e.toString(), e);

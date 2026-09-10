@@ -2,6 +2,8 @@ package com.hmdp;
 
 import com.hmdp.cache.ShopCacheMetrics;
 import com.hmdp.controller.VoucherOrderController;
+import com.hmdp.controller.UploadController;
+import com.hmdp.dto.Result;
 import com.hmdp.enums.ShopCampusSort;
 import com.hmdp.entity.StudentVerification;
 import com.hmdp.entity.Voucher;
@@ -9,16 +11,26 @@ import com.hmdp.enums.StudentVerificationStatus;
 import com.hmdp.risk.RiskLimit;
 import com.hmdp.enums.VoucherOrderStatus;
 import com.hmdp.service.StudentEligibilityPolicy;
+import com.hmdp.security.OpsAuthorizer;
+import com.hmdp.security.UnauthorizedOpsException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureContractTests {
@@ -135,6 +147,60 @@ class ArchitectureContractTests {
     }
 
     @Test
+    void socialSchemaMakesLikesAndFollowsIdempotent() throws IOException {
+        String schema = resource("db/hmdp.sql");
+        assertTrue(schema.contains("CREATE TABLE `tb_blog_like`"));
+        assertTrue(schema.contains("UNIQUE KEY `uk_blog_user` (`blog_id`, `user_id`)"));
+        assertTrue(schema.contains("UNIQUE KEY `uk_user_follow` (`user_id`, `follow_user_id`)"));
+        assertTrue(schema.contains("INDEX `idx_comment_blog_status_time` (`blog_id`, `status`, `create_time`)"));
+        assertTrue(schema.contains("INDEX `idx_blog_hot` (`liked`, `create_time`)"));
+    }
+
+    @Test
+    void operationsRequireAConfiguredConstantTimeToken() {
+        OpsAuthorizer authorizer = new OpsAuthorizer();
+        assertThrows(UnauthorizedOpsException.class, () -> authorizer.requireAuthorized("anything"));
+        ReflectionTestUtils.setField(authorizer, "configuredToken", "ops-secret");
+        assertThrows(UnauthorizedOpsException.class, () -> authorizer.requireAuthorized("wrong"));
+        assertDoesNotThrow(() -> authorizer.requireAuthorized("ops-secret"));
+    }
+
+    @Test
+    void pendingSeckillMessageIsAcknowledgedOnlyAfterConsumerBusinessSucceeds() throws IOException {
+        String publisher = projectFile("src/main/java/com/hmdp/mq/ShushuMessagePublisher.java");
+        String consumer = projectFile("src/main/java/com/hmdp/mq/VoucherOrderMessageConsumer.java");
+        assertTrue(!publisher.contains("reservationService.acknowledge"));
+        assertTrue(consumer.indexOf("orderService.createVoucherOrder(event)")
+                < consumer.indexOf("reservationService.acknowledge"));
+    }
+
+    @Test
+    void seckillPerformancePlanDefinesTenThreadsAndOneThousandRequests() throws IOException {
+        String plan = projectFile("performance/shushu-seckill.jmx");
+        assertTrue(plan.contains("${__P(threads,10)}"));
+        assertTrue(plan.contains("${__P(loops,100)}"));
+        assertTrue(plan.contains("X-Device-Fingerprint"));
+    }
+
+    @Test
+    void uploadAcceptsRealImageSignatureAndKeepsFileInsideConfiguredRoot(@TempDir Path tempDirectory) {
+        OpsAuthorizer authorizer = new OpsAuthorizer();
+        ReflectionTestUtils.setField(authorizer, "configuredToken", "ops-secret");
+        UploadController controller = new UploadController(tempDirectory.toString(), authorizer);
+        byte[] pngHeader = new byte[]{(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10};
+        MockMultipartFile image = new MockMultipartFile("file", "campus.png", "image/png", pngHeader);
+
+        Result uploaded = controller.uploadImage(image);
+        assertTrue(uploaded.getSuccess());
+        String publicPath = (String) uploaded.getData();
+        assertTrue(publicPath.startsWith("/uploads/blogs/"));
+        assertTrue(Files.isRegularFile(tempDirectory.resolve(publicPath.substring("/uploads/".length()))));
+
+        Result deleted = controller.deleteBlogImage("ops-secret", publicPath);
+        assertTrue(deleted.getSuccess());
+    }
+
+    @Test
     void defaultRiskWindowProducesNinetySevenPercentInterceptionTarget() throws NoSuchMethodException {
         RiskLimit limit = VoucherOrderController.class
                 .getMethod("seckillVoucher", Long.class)
@@ -158,5 +224,9 @@ class ArchitectureContractTests {
     private String resource(String path) throws IOException {
         return StreamUtils.copyToString(
                 new ClassPathResource(path).getInputStream(), StandardCharsets.UTF_8);
+    }
+
+    private String projectFile(String path) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
     }
 }
