@@ -171,8 +171,12 @@ class ArchitectureContractTests {
         String publisher = projectFile("src/main/java/com/hmdp/mq/ShushuMessagePublisher.java");
         String consumer = projectFile("src/main/java/com/hmdp/mq/VoucherOrderMessageConsumer.java");
         assertTrue(!publisher.contains("reservationService.acknowledge"));
+        assertTrue(consumer.indexOf("orderCreationLockService.tryLock")
+                < consumer.indexOf("orderService.createVoucherOrder(event)"));
         assertTrue(consumer.indexOf("orderService.createVoucherOrder(event)")
                 < consumer.indexOf("reservationService.acknowledge"));
+        assertTrue(consumer.indexOf("reservationService.acknowledge")
+                < consumer.indexOf("orderCreationLockService.unlock"));
     }
 
     @Test
@@ -180,6 +184,7 @@ class ArchitectureContractTests {
         String plan = projectFile("performance/shushu-seckill.jmx");
         assertTrue(plan.contains("${__P(threads,10)}"));
         assertTrue(plan.contains("${__P(loops,100)}"));
+        assertTrue(plan.contains("<stringProp name=\"ThreadGroup.num_threads\">"));
         assertTrue(plan.contains("X-Device-Fingerprint"));
     }
 
@@ -220,6 +225,15 @@ class ArchitectureContractTests {
         assertTrue(VoucherOrderStatus.REFUNDING.canTransitionTo(VoucherOrderStatus.REFUNDED));
         assertTrue(!VoucherOrderStatus.CANCELLED.canTransitionTo(VoucherOrderStatus.PAID));
         assertTrue(!VoucherOrderStatus.REFUNDED.canTransitionTo(VoucherOrderStatus.PAID));
+    }
+
+    @Test
+    void runtimeBootstrapHandlesNullableLoginFieldsAndWritableMqOffsets() throws IOException {
+        String userService = projectFile("src/main/java/com/hmdp/service/impl/UserServiceImpl.java");
+        String application = projectFile("src/main/java/com/hmdp/ShushuDiscoveryApplication.java");
+        assertTrue(userService.contains("fieldValue == null ? null : fieldValue.toString()"));
+        assertTrue(application.contains("rocketmq.client.localOffsetStoreDir"));
+        assertTrue(application.contains("ROCKETMQ_LOCAL_OFFSET_DIR"));
     }
 
     private String resource(String path) throws IOException {

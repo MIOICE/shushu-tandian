@@ -38,3 +38,7 @@ performance/report/
 
 ### Runtime uploads ###
 uploads/
+
+### Local acceptance-test toolchain ###
+.tools/
+jmeter.log

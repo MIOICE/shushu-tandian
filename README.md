@@ -5,7 +5,7 @@
 ## 核心链路
 
 - 秒杀：Redis 预扣库存，Lua 在一个原子操作中校验活动时间、库存和一人一券；MySQL 的 `stock > 0` 条件更新与 `(user_id, voucher_id)` 唯一索引提供最终防线。
-- 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者幂等创建订单。预占事件会由同一个 Lua 原子写入 Redis 待处理区，只有消费者成功完成数据库事务后才清理；发送失败、消费失败、确认丢失或进程重启均由定时任务重投。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
+- 异步订单：HTTP 请求仅完成限流、Redis 预占与 RocketMQ 异步投递，消费者使用按订单号的 Redis 分布式锁串行处理重复投递，再由数据库唯一索引保证最终幂等。预占事件会由同一个 Lua 原子写入 Redis 待处理区，只有消费者成功完成数据库事务后才清理；发送失败、消费失败、确认丢失或进程重启均由定时任务重投。接口返回的是“已受理”的订单号，可通过 `GET /voucher-order/{id}` 查询落库状态。
 - 超时关闭：每 30 秒分批扫描超过 15 分钟的未支付订单，状态条件更新成功后同时回补 MySQL 与 Redis；Redis Lua 会核对订单号，重复执行不会重复回补，并保留一人一券标记。
 - 订单状态：支付回调凭证校验、支付流水唯一索引和条件更新共同保证幂等；支付与超时关单并发时只有一个状态迁移能够成功。
 - 库存对账：定时比较 MySQL、Redis 与待投递消息数量，正常异步差值标记为 `CONSISTENT`，异常差值标记为 `CHECK_REQUIRED` 并告警。
@@ -28,6 +28,8 @@ mvn spring-boot:run
 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、RocketMQ NameServer `9876`、Broker `10911`。配置均可用 [.env.example](./.env.example) 中的环境变量覆盖。
 
 支付回调、运营接口和学生身份摘要分别使用 `PAYMENT_CALLBACK_TOKEN`、`OPS_TOKEN` 和 `STUDENT_ID_SALT`。三者都应设置为不同的高强度随机值；未配置时对应的敏感操作会被拒绝。
+
+RocketMQ 广播消费者的本地位点默认写入系统临时目录下的 `shushu-rocketmq-offsets`；生产环境可通过 `ROCKETMQ_LOCAL_OFFSET_DIR` 指向持久化且可写的目录。
 
 首次创建的 MySQL 数据卷会自动导入 `src/main/resources/db/hmdp.sql`。若使用已经导入旧版脚本的数据库，需要手动执行一次：
 
@@ -79,6 +81,8 @@ curl -X POST http://localhost:8081/voucher/seckill \
 ## 压测与验收
 
 项目提供两份 JMeter 5.6 测试计划。指标必须在目标部署环境实测，仓库不会把目标值伪装成已测结果。
+
+本项目最近一次完整本地验收的环境、步骤与实测结果见 [performance/ACCEPTANCE.md](./performance/ACCEPTANCE.md)。
 
 ### 1. 秒杀：10 线程、1000 请求
 

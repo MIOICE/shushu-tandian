@@ -91,7 +91,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         if (getById(event.getOrderId()) != null) {
             return;
         }
-        int existing = count(query().eq("user_id", event.getUserId())
+        long existing = count(query().eq("user_id", event.getUserId())
                 .eq("voucher_id", event.getVoucherId()).getWrapper());
         if (existing > 0) {
             log.info("忽略重复订单消息, userId={}, voucherId={}", event.getUserId(), event.getVoucherId());
