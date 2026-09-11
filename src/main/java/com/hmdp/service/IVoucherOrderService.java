@@ -24,6 +24,12 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
 
     Result queryOrder(Long orderId);
 
+    Result queryMyOrders(Integer current, Integer status);
+
+    Result cancelOrder(Long orderId);
+
+    Result useOrder(Long orderId);
+
     Result payOrder(Long orderId);
 
     Result handlePaymentCallback(String callbackToken, PaymentCallbackDTO callback);

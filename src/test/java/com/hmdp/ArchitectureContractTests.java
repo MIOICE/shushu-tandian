@@ -94,6 +94,7 @@ class ArchitectureContractTests {
         assertTrue(schema.contains("INDEX `idx_status_create_time` (`status`, `create_time`)"));
         assertTrue(schema.contains("UNIQUE KEY `uk_pay_no` (`pay_no`)"));
         assertTrue(schema.contains("`close_time` timestamp NULL DEFAULT NULL"));
+        assertTrue(schema.contains("INDEX `idx_user_create_time` (`user_id`, `create_time`)"));
     }
 
     @Test

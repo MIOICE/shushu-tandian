@@ -1377,7 +1377,8 @@ CREATE TABLE `tb_voucher_order`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_user_voucher` (`user_id`, `voucher_id`) USING BTREE,
   UNIQUE KEY `uk_pay_no` (`pay_no`) USING BTREE,
-  INDEX `idx_status_create_time` (`status`, `create_time`) USING BTREE
+  INDEX `idx_status_create_time` (`status`, `create_time`) USING BTREE,
+  INDEX `idx_user_create_time` (`user_id`, `create_time`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------

@@ -59,6 +59,12 @@ mysql -uroot -p hmdp < src/main/resources/db/shushu_student_v4.sql
 mysql -uroot -p hmdp < src/main/resources/db/shushu_social_v5.sql
 ```
 
+订单列表查询索引升级继续执行：
+
+```bash
+mysql -uroot -p hmdp < src/main/resources/db/shushu_order_lifecycle_v6.sql
+```
+
 新增秒杀券示例（开始和结束时间需改成当前有效时间）：
 
 ```bash
@@ -118,7 +124,10 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 |---|---|---|
 | POST | `/voucher-order/seckill/{voucherId}` | 秒杀受理，返回订单号 |
 | GET | `/voucher-order/{orderId}` | 查询本人订单状态 |
+| GET | `/voucher-order/me?current=1&status=2` | 分页查询本人订单，状态参数可选 |
 | POST | `/voucher-order/{orderId}/pay` | 支付未关闭订单 |
+| POST | `/voucher-order/{orderId}/cancel` | 主动取消本人待支付订单并回补库存 |
+| POST | `/voucher-order/{orderId}/use` | 登录并携带 `X-Ops-Token` 核销已支付订单 |
 | POST | `/voucher-order/payment/callback` | 携带 `X-Payment-Callback-Token` 的幂等支付回调；订单尚未落库时返回 503 以提示重试 |
 | GET | `/shop/{id}` | 两级缓存查询店铺 |
 | POST / PUT | `/shop` | 携带 `X-Ops-Token` 新增或更新店铺，并触发缓存一致性链路 |
@@ -149,4 +158,4 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 mvn clean test
 ```
 
-数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)、[shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql) 和 [shushu_social_v5.sql](./src/main/resources/db/shushu_social_v5.sql)。
+数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)、[shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql)、[shushu_social_v5.sql](./src/main/resources/db/shushu_social_v5.sql) 和 [shushu_order_lifecycle_v6.sql](./src/main/resources/db/shushu_order_lifecycle_v6.sql)。

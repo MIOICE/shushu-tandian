@@ -17,6 +17,7 @@ import com.hmdp.risk.UnauthorizedPaymentCallbackException;
 import com.hmdp.risk.InvalidPaymentCallbackException;
 import com.hmdp.risk.PaymentCallbackRetryException;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
@@ -167,6 +168,66 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     }
 
     @Override
+    public Result queryMyOrders(Integer current, Integer status) {
+        if (UserHolder.getUser() == null) {
+            return Result.fail("请先登录");
+        }
+        if (status != null) {
+            try {
+                VoucherOrderStatus.fromCode(status);
+            } catch (IllegalArgumentException invalidStatus) {
+                return Result.fail("订单状态不合法");
+            }
+        }
+        int pageNumber = current == null || current < 1 ? 1 : current;
+        Page<VoucherOrder> page = query()
+                .eq("user_id", UserHolder.getUser().getId())
+                .eq(status != null, "status", status)
+                .orderByDesc("create_time")
+                .page(new Page<>(pageNumber, 10));
+        page.getRecords().forEach(this::fillStatusDescription);
+        return Result.ok(page.getRecords(), page.getTotal());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result cancelOrder(Long orderId) {
+        if (UserHolder.getUser() == null) {
+            return Result.fail("请先登录");
+        }
+        VoucherOrder order = getById(orderId);
+        if (order == null || !UserHolder.getUser().getId().equals(order.getUserId())) {
+            return Result.fail("订单不存在");
+        }
+        if (order.getStatus() != VoucherOrderStatus.PENDING_PAYMENT.getCode()) {
+            return Result.fail("只有待支付订单可以取消");
+        }
+        return closeExpiredOrder(orderId) ? Result.ok() : Result.fail("订单状态已变化，请刷新后重试");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result useOrder(Long orderId) {
+        VoucherOrder order = getById(orderId);
+        if (order == null) {
+            return Result.fail("订单不存在");
+        }
+        if (order.getStatus() == VoucherOrderStatus.USED.getCode()) {
+            return Result.ok();
+        }
+        if (order.getStatus() != VoucherOrderStatus.PAID.getCode()) {
+            return Result.fail("只有已支付订单可以核销");
+        }
+        boolean used = update()
+                .set("status", VoucherOrderStatus.USED.getCode())
+                .set("use_time", LocalDateTime.now())
+                .eq("id", orderId)
+                .eq("status", VoucherOrderStatus.PAID.getCode())
+                .update();
+        return used ? Result.ok() : Result.fail("订单状态已变化，请刷新后重试");
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Result payOrder(Long orderId) {
         if (UserHolder.getUser() == null) {
@@ -239,6 +300,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return MessageDigest.isEqual(
                 paymentCallbackToken.getBytes(StandardCharsets.UTF_8),
                 provided.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void fillStatusDescription(VoucherOrder order) {
+        order.setStatusDescription(VoucherOrderStatus.fromCode(order.getStatus()).getDescription());
     }
 
     private String reservationError(long code) {
