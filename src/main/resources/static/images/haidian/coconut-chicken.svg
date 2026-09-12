@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">椰子鸡插画</title><desc id="desc">椰子鸡火锅与椰叶的纸张风格插画</desc>
+  <rect width="640" height="420" fill="#f1eee3"/><path d="M36 49l568 0" stroke="#9b765d" stroke-width="3" stroke-dasharray="10 10"/>
+  <path d="M87 201C65 121 81 73 125 35M104 133c-33-36-61-41-86-27 28 9 51 28 70 55M111 119c31-43 66-53 100-38-32 17-57 39-76 70" fill="#7aa382" stroke="#273f59" stroke-width="7"/>
+  <ellipse cx="350" cy="344" rx="190" ry="35" fill="#273f59" opacity=".13"/>
+  <path d="M166 177h374l-38 153c-7 29-33 50-63 50H267c-31 0-57-21-64-51z" fill="#fffaf3" stroke="#273f59" stroke-width="9"/>
+  <ellipse cx="353" cy="177" rx="188" ry="54" fill="#f5dca4" stroke="#273f59" stroke-width="9"/>
+  <path d="M222 175c34-31 62-26 83 7 28-37 61-40 96-5 27-30 54-28 80 0" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="271" cy="167" r="12" fill="#6f9d75"/><circle cx="376" cy="188" r="13" fill="#6f9d75"/><circle cx="443" cy="159" r="11" fill="#ee6578"/>
+  <path d="M268 111c-21-31-16-51-3-68M357 112c18-31 14-50 1-68M430 121c18-26 16-43 7-59" fill="none" stroke="#9bc4d7" stroke-width="8" stroke-linecap="round"/>
+  <text x="294" y="76" fill="#273f59" font-family="serif" font-size="34" font-weight="700">椰语椰子鸡</text><text x="325" y="105" fill="#9b765d" font-family="sans-serif" font-size="16" letter-spacing="3">COCONUT &amp; BREEZE</text>
+</svg>

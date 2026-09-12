@@ -251,6 +251,7 @@ class ArchitectureContractTests {
         assertTrue(mvcConfig.contains("\"/dashboard.html\""));
         assertTrue(mvcConfig.contains("\"/dashboard.css\""));
         assertTrue(mvcConfig.contains("\"/dashboard.js\""));
+        assertTrue(mvcConfig.contains("\"/images/**\""));
     }
 
     @Test

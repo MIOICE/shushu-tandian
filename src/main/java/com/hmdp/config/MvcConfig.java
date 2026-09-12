@@ -31,6 +31,7 @@ public class MvcConfig implements WebMvcConfigurer {
                       "/dashboard.html",
                       "/dashboard.css",
                       "/dashboard.js",
+                      "/images/**",
                       "/favicon.ico",
                       "/error",
                       "/shop/**",

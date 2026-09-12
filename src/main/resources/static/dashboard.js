@@ -110,7 +110,7 @@ async function initializePublisher() {
     $('#campaignCampus').innerHTML = publisherState.campuses
       .map(campus => `<option value="${campus.id}">${escapeHtml(campus.name)} · ${escapeHtml(campus.city)}</option>`).join('');
     if (publisherState.campuses.length) {
-      const defaultCampus = publisherState.campuses.find(campus => Number(campus.id) === 2) || publisherState.campuses[0];
+      const defaultCampus = publisherState.campuses.find(campus => Number(campus.id) === 4) || publisherState.campuses[0];
       $('#campaignCampus').value = String(defaultCampus.id);
       await changeCampaignCampus();
     }

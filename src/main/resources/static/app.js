@@ -70,7 +70,7 @@ async function bootstrap() {
     await restoreSession();
     const preferredCampus = state.user?.campusId;
     state.campusId = state.campuses.find(item => item.id === preferredCampus)?.id
-      || state.campuses.find(item => item.id === 2)?.id || state.campuses[0]?.id;
+      || state.campuses.find(item => item.id === 4)?.id || state.campuses[0]?.id;
     renderCampuses();
     await loadShops();
   } catch (error) {
@@ -104,6 +104,9 @@ function renderAccount() {
 }
 
 function renderCampuses() {
+  const currentCampus = state.campuses.find(item => item.id === state.campusId);
+  const heroCampusName = $('#heroCampusName');
+  if (heroCampusName && currentCampus) heroCampusName.textContent = currentCampus.name;
   $('#campusList').innerHTML = state.campuses.map(item => `
     <button class="campus-button ${item.id === state.campusId ? 'active' : ''}" data-id="${item.id}" type="button">
       <b>${escapeHtml(item.name.replace(/校区$/, ''))}</b>

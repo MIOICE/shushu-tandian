@@ -72,13 +72,21 @@ mysql -uroot -p hmdp < src/main/resources/db/shushu_social_v5.sql
 mysql -uroot -p hmdp < src/main/resources/db/shushu_order_lifecycle_v6.sql
 ```
 
+加入海南大学海甸校区、5 家校园周边演示店铺和一场可直接体验的秒杀活动：
+
+```bash
+mysql -uroot -p hmdp < src/main/resources/db/shushu_hainan_haidian_v7.sql
+```
+
+该脚本可以重复执行，不会重复创建店铺或活动。项目默认进入海南大学海甸校区；演示店铺名称与插画不代表真实商家合作关系。
+
 新增秒杀券示例（开始和结束时间需改成当前有效时间）：
 
 ```bash
 curl -X POST http://localhost:8081/voucher/seckill \
   -H "Content-Type: application/json" \
   -H "X-Ops-Token: $OPS_TOKEN" \
-  -d '{"shopId":1,"campusId":2,"studentOnly":1,"title":"校园夜宵5折券","subTitle":"学生专享","rules":"每人限购一份","payValue":500,"actualValue":1000,"type":1,"status":1,"stock":5,"beginTime":"2026-09-10T09:00:00","endTime":"2026-09-10T23:00:00"}'
+  -d '{"shopId":15,"campusId":4,"studentOnly":1,"title":"校园夜宵5折券","subTitle":"学生专享","rules":"每人限购一份","payValue":500,"actualValue":1000,"type":1,"status":1,"stock":5,"beginTime":"2026-09-12T09:00:00","endTime":"2026-09-30T23:00:00"}'
 ```
 
 登录沿用验证码流程：调用 `POST /user/code?phone=手机号`，从开发日志取得验证码，再调用 `POST /user/login` 获取 token。生产环境应替换日志验证码为真实短信服务。
@@ -132,7 +140,7 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/voucher-order/seckill/{voucherId}` | 秒杀受理，返回订单号 |
-| GET | `/voucher/seckill/active?campusId=2` | 查询指定校区尚未结束的秒杀活动 |
+| GET | `/voucher/seckill/active?campusId=4` | 查询指定校区尚未结束的秒杀活动 |
 | POST | `/user/code?phone=手机号` | 发送登录验证码；本地可通过开关返回演示验证码 |
 | POST | `/user/login` | 验证码登录；手机号首次登录时自动注册 |
 | POST | `/user/logout` | 删除当前 Redis 登录态 |
@@ -145,9 +153,9 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | GET | `/shop/{id}` | 两级缓存查询店铺 |
 | POST / PUT | `/shop` | 携带 `X-Ops-Token` 新增或更新店铺，并触发缓存一致性链路 |
 | GET | `/shop/cache/stats` | 查询缓存命中与回源统计 |
-| GET | `/campus?city=杭州市` | 查询已启用校区，城市参数可选 |
+| GET | `/campus?city=海口市` | 查询已启用校区，城市参数可选 |
 | GET | `/campus/{id}` | 查询校区详情 |
-| GET | `/shop/of/campus?campusId=2&studentOnly=true&sort=hot&current=1` | 按校区发现学生优惠店铺；排序支持 `hot`、`score`、`price` |
+| GET | `/shop/of/campus?campusId=4&studentOnly=true&sort=hot&current=1` | 按校区发现学生优惠店铺；排序支持 `hot`、`score`、`price` |
 | PUT | `/user/campus/{campusId}` | 设置当前用户的默认校区 |
 | POST | `/student-verification` | 提交学生认证，参数为 `campusId`、`studentNo` |
 | GET | `/student-verification/me` | 查询本人的学生认证状态 |
@@ -171,4 +179,4 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 mvn clean test
 ```
 
-数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)、[shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql)、[shushu_social_v5.sql](./src/main/resources/db/shushu_social_v5.sql) 和 [shushu_order_lifecycle_v6.sql](./src/main/resources/db/shushu_order_lifecycle_v6.sql)。
+数据库结构的最终约束位于 [hmdp.sql](./src/main/resources/db/hmdp.sql)，存量库按顺序执行 [shushu_upgrade.sql](./src/main/resources/db/shushu_upgrade.sql)、[shushu_order_v2.sql](./src/main/resources/db/shushu_order_v2.sql)、[shushu_campus_v3.sql](./src/main/resources/db/shushu_campus_v3.sql)、[shushu_student_v4.sql](./src/main/resources/db/shushu_student_v4.sql)、[shushu_social_v5.sql](./src/main/resources/db/shushu_social_v5.sql)、[shushu_order_lifecycle_v6.sql](./src/main/resources/db/shushu_order_lifecycle_v6.sql) 和 [shushu_hainan_haidian_v7.sql](./src/main/resources/db/shushu_hainan_haidian_v7.sql)。

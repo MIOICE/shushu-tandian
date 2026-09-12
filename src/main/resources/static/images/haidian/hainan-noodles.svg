@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">海南粉插画</title><desc id="desc">一碗海南粉与校园晨光的纸张风格插画</desc>
+  <rect width="640" height="420" fill="#fbf7f1"/><path d="M0 82h640M0 336h640" stroke="#3d7fbe" stroke-width="8"/><path d="M0 94h640M0 324h640" stroke="#ee6578" stroke-width="4"/>
+  <circle cx="528" cy="96" r="52" fill="#f3bd68"/><path d="M70 270c107-66 210-77 330-34s178 33 240 3v181H0V314c20-9 43-24 70-44z" fill="#dce9df"/>
+  <ellipse cx="314" cy="330" rx="184" ry="35" fill="#273f59" opacity=".12"/>
+  <path d="M125 191h373l-47 147c-8 25-31 42-57 42H228c-27 0-50-18-58-44z" fill="#fff" stroke="#273f59" stroke-width="9"/>
+  <ellipse cx="312" cy="191" rx="188" ry="53" fill="#fff4d5" stroke="#273f59" stroke-width="9"/>
+  <path d="M177 183c52-35 87 36 135 0s84 33 137-5M181 203c53-28 91 36 139 3s83 28 127-4" fill="none" stroke="#e4a84f" stroke-width="11" stroke-linecap="round"/>
+  <path d="M258 151l24 34M356 150l-23 37" stroke="#6f9d75" stroke-width="13" stroke-linecap="round"/>
+  <text x="52" y="62" fill="#273f59" font-family="serif" font-size="31" font-weight="700">海甸阿侬海南粉</text><text x="405" y="390" fill="#9b765d" font-family="sans-serif" font-size="17" letter-spacing="3">MORNING NOTE</text>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">白沙门烧烤插画</title><desc id="desc">海边晚风与烧烤串的纸张风格插画</desc>
+  <rect width="640" height="420" fill="#273f59"/><circle cx="510" cy="93" r="53" fill="#f3bd68"/>
+  <path d="M0 249c89-32 172-27 249 11s156 40 241 7 114-31 150-20v173H0z" fill="#3d7fbe"/><path d="M0 286c106-28 182-18 257 15s157 32 240 2 111-23 143-14" fill="none" stroke="#fbf7f1" stroke-width="7" opacity=".65"/>
+  <path d="M72 313l237-92M119 349l237-92M178 367l237-92" stroke="#f4d59c" stroke-width="12" stroke-linecap="round"/>
+  <path d="M124 269l54 22M187 246l54 22M185 323l54 21M249 299l54 21M260 334l54 21M322 310l54 21" stroke="#ee6578" stroke-width="29" stroke-linecap="round"/>
+  <path d="M79 162c20-31 53-31 73 0 20-31 53-31 73 0M259 116c18-28 48-28 66 0" fill="none" stroke="#fbf7f1" stroke-width="6" stroke-linecap="round"/>
+  <text x="38" y="61" fill="#fbf7f1" font-family="serif" font-size="34" font-weight="700">白沙门晚风烧烤</text><text x="40" y="94" fill="#f3bd68" font-family="sans-serif" font-size="17" letter-spacing="4">SUNSET · SEA · BBQ</text>
+</svg>

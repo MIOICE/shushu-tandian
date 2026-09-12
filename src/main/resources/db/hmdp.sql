@@ -137,7 +137,7 @@ CREATE TABLE `tb_campus`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_campus_name_city` (`name`, `city`) USING BTREE,
   INDEX `idx_city_status` (`city`, `status`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '大学校区' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '大学校区' ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Records of tb_campus
@@ -145,6 +145,7 @@ CREATE TABLE `tb_campus`  (
 INSERT INTO `tb_campus` VALUES (1, '浙江大学紫金港校区', '杭州市', '余杭塘路866号', 120.090, 30.305, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO `tb_campus` VALUES (2, '浙江工业大学朝晖校区', '杭州市', '潮王路18号', 120.164, 30.287, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO `tb_campus` VALUES (3, '杭州师范大学仓前校区', '杭州市', '余杭塘路2318号', 120.016, 30.295, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO `tb_campus` VALUES (4, '海南大学海甸校区', '海口市', '美兰区人民大道58号', 110.329, 20.059, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ----------------------------
 -- Table structure for tb_shop
@@ -1398,5 +1399,30 @@ CREATE TABLE `tb_voucher_order`  (
 -- ----------------------------
 -- Records of tb_voucher_order
 -- ----------------------------
+
+-- ----------------------------
+-- 海南大学海甸校区演示数据
+-- 店铺名称与图片均为项目演示内容，不代表真实商家合作关系。
+-- ----------------------------
+INSERT INTO `tb_shop`
+  (`name`, `type_id`, `campus_id`, `student_discount`, `tags`, `images`, `area`, `address`, `x`, `y`, `avg_price`, `sold`, `comments`, `score`, `open_hours`)
+VALUES
+  ('椰风清补凉', 1, 4, 1, '海大南门,清补凉,学生优惠', '/images/haidian/qingbuliang.svg', '海南大学南门', '海甸三西路校园南门旁', 110.329, 20.055, 16, 5862, 1286, 49, '11:00-23:30'),
+  ('海甸阿侬海南粉', 1, 4, 1, '海南粉,早餐,学生优惠', '/images/haidian/hainan-noodles.svg', '海大北门', '海甸五西路校园北门旁', 110.326, 20.064, 18, 4930, 968, 48, '06:30-21:30'),
+  ('椰语椰子鸡', 1, 4, 1, '椰子鸡,聚餐,学生优惠', '/images/haidian/coconut-chicken.svg', '海甸岛', '人民大道校园东侧', 110.335, 20.059, 72, 3725, 756, 47, '10:30-22:30'),
+  ('琼味糟粕醋小馆', 1, 4, 0, '糟粕醋,海南风味,宿舍聚餐', '/images/haidian/zaopocu.svg', '海甸岛', '海甸二东路沿街', 110.341, 20.055, 65, 3189, 632, 46, '11:00-23:00'),
+  ('白沙门晚风烧烤', 1, 4, 0, '夜宵,烧烤,白沙门', '/images/haidian/beach-bbq.svg', '白沙门公园', '海甸六东路白沙门公园附近', 110.346, 20.071, 52, 2976, 541, 45, '17:00-02:00');
+
+SET @haidian_demo_shop_id := (SELECT `id` FROM `tb_shop` WHERE `campus_id` = 4 AND `name` = '椰风清补凉' ORDER BY `id` LIMIT 1);
+INSERT INTO `tb_voucher`
+  (`shop_id`, `campus_id`, `student_only`, `title`, `sub_title`, `rules`, `pay_value`, `actual_value`, `type`, `status`)
+VALUES
+  (@haidian_demo_shop_id, 4, 0, '海甸开学季 20 元清补凉券', '限量 100 份，每位同学限购一份', '仅限椰风清补凉使用\n不可与其他优惠同享', 990, 2000, 1, 1);
+
+SET @haidian_demo_voucher_id := (SELECT `id` FROM `tb_voucher` WHERE `campus_id` = 4 AND `title` = '海甸开学季 20 元清补凉券' ORDER BY `id` LIMIT 1);
+INSERT INTO `tb_seckill_voucher`
+  (`voucher_id`, `stock`, `create_time`, `begin_time`, `end_time`, `update_time`)
+VALUES
+  (@haidian_demo_voucher_id, 100, CURRENT_TIMESTAMP, '2026-01-01 00:00:00', '2035-12-31 23:59:59', CURRENT_TIMESTAMP);
 
 SET FOREIGN_KEY_CHECKS = 1;
