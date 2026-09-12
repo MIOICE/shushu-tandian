@@ -47,7 +47,7 @@ function renderMetrics(metrics) {
   $('#localHits').textContent = format(localHits);
   $('#redisHits').textContent = format(redisHits);
   $('#dbQueries').textContent = format(dbQueries);
-  $('#hitGauge').style.background = `conic-gradient(var(--orange) ${percent * 3.6}deg,#eee6f3 0deg)`;
+  $('#hitGauge').style.background = `conic-gradient(var(--blue) ${percent * 3.6}deg,#e8e2dc 0deg)`;
   $('#cacheNote').textContent = requests > 0
     ? `实时统计：${format(requests)} 次店铺详情访问中，${format(localHits + redisHits)} 次由缓存直接响应。`
     : '缓存指标接口正常，当前实例尚无店铺详情访问记录。';

@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#30185f">
+  <meta name="theme-color" content="#faf6ef">
   <title>鼠鼠探店运营后台</title>
-  <link rel="stylesheet" href="/dashboard.css?v=20260912-4">
+  <link rel="stylesheet" href="/dashboard.css?v=20260912-5">
 </head>
 <body>
   <div class="admin-layout">
     <aside class="admin-sidebar">
       <a class="dashboard-brand" href="/dashboard.html">
         <span class="brand-mark">鼠</span>
-        <span><b>鼠鼠探店</b><small>SHUSHU ADMIN</small></span>
+        <span><b>Shushu's Discovery</b><small>鼠鼠探店 · 校园运营手记</small></span>
       </a>
 
       <nav class="side-nav" aria-label="后台导航">
-        <span class="nav-group">工作台</span>
+        <span class="nav-group">OPERATIONS</span>
         <a href="#overview" data-page-title="数据概览"><i>概</i><span>数据概览</span></a>
         <a class="active" href="#publisher" data-page-title="秒杀活动"><i>秒</i><span>秒杀活动</span><em>发布</em></a>
         <a href="#runtime" data-page-title="运行监控"><i>数</i><span>运行监控</span></a>
@@ -44,19 +44,20 @@
       <main class="dashboard-shell">
         <section class="dashboard-intro" id="overview">
           <div class="hero-copy">
-            <span class="eyebrow">SHUSHU CREATIVE LAB · 鼠鼠运营实验室</span>
-            <h1>今天也要把<br><em>校园好店</em>推上热门！</h1>
-            <p>发布限时秒杀，盯住每一条核心链路，让同学们快乐薅到羊毛。</p>
-            <div class="hero-tags"><span># 校园探店</span><span># 限时秒杀</span><span># 今日营业</span></div>
+            <span class="eyebrow">OPERATIONS NOTEBOOK</span>
+            <h1>欢迎光临，<em>鼠鼠运营手记</em></h1>
+            <p>见字如晤，愿每一家校园好店都能被看见。这里用于发布秒杀活动、观察运行数据，以及记录系统的每一次稳定抵达。</p>
+            <div class="hero-tags"><span>校园探店</span><span>活动运营</span><span>系统手记</span></div>
           </div>
           <div class="hero-visual" aria-hidden="true">
-            <span class="sticker sticker-hot">HOT!</span>
+            <span class="sticker sticker-hot">SHUSHU</span>
             <span class="sticker sticker-star">✦</span>
-            <div class="mascot-face"><i></i><b>鼠</b><small>冲鸭!</small></div>
+            <div class="mascot-face"><i></i><b>鼠</b><small>今日营业</small></div>
             <div class="update-time"><span>LIVE · 数据更新时间</span><b id="updatedAt">--:--:--</b><small>每 15 秒自动刷新</small></div>
           </div>
         </section>
 
+        <div class="section-lead"><h2>核心指标</h2><p>一页读懂当前系统的验收结果。</p></div>
         <section class="summary-grid" aria-label="核心验收指标">
           <article class="summary-card orange"><span class="summary-icon">秒</span><div><span class="card-label">秒杀一致性</span><strong>0 <small>单</small></strong><p>超卖与重复下单</p></div></article>
           <article class="summary-card blue"><span class="summary-icon">快</span><div><span class="card-label">异步受理</span><strong>≤ 50 <small>ms</small></strong><p>RocketMQ 解耦创建</p></div></article>
@@ -66,7 +67,7 @@
 
         <section class="panel publisher-panel" id="publisher" aria-labelledby="publisherTitle">
           <div class="panel-heading publisher-heading">
-            <div><span class="panel-kicker">CAMPAIGN MANAGEMENT</span><h2 id="publisherTitle">发布秒杀活动</h2><p>填写活动信息，发布后自动同步到用户首页和 Redis 库存。</p></div>
+            <div><span class="panel-kicker">CAMPAIGN MANAGEMENT</span><h2 id="publisherTitle">发布一场校园秒杀</h2><p>写下活动信息，发布后自动同步到用户首页和 Redis 库存。</p></div>
             <span class="operation-badge">新建活动</span>
           </div>
           <div class="publisher-layout">
@@ -167,6 +168,6 @@
       </main>
     </div>
   </div>
-  <script src="/dashboard.js?v=20260912-4" defer></script>
+  <script src="/dashboard.js?v=20260912-5" defer></script>
 </body>
 </html>
