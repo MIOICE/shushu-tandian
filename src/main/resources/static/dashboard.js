@@ -47,7 +47,7 @@ function renderMetrics(metrics) {
   $('#localHits').textContent = format(localHits);
   $('#redisHits').textContent = format(redisHits);
   $('#dbQueries').textContent = format(dbQueries);
-  $('#hitGauge').style.background = `conic-gradient(var(--orange) ${percent * 3.6}deg,#292e37 0deg)`;
+  $('#hitGauge').style.background = `conic-gradient(var(--orange) ${percent * 3.6}deg,#edf0f3 0deg)`;
   $('#cacheNote').textContent = requests > 0
     ? `实时统计：${format(requests)} 次店铺详情访问中，${format(localHits + redisHits)} 次由缓存直接响应。`
     : '缓存指标接口正常，当前实例尚无店铺详情访问记录。';
@@ -242,6 +242,16 @@ async function publishCampaign(event) {
   }
 }
 
+function initializeNavigation() {
+  const links = [...document.querySelectorAll('.side-nav a')];
+  links.forEach(link => {
+    link.addEventListener('click', () => {
+      links.forEach(item => item.classList.toggle('active', item === link));
+      $('#pageContextTitle').textContent = link.dataset.pageTitle;
+    });
+  });
+}
+
 $('#refreshButton').addEventListener('click', refreshDashboard);
 $('#campaignCampus').addEventListener('change', changeCampaignCampus);
 $('#campaignForm').addEventListener('submit', publishCampaign);
@@ -252,6 +262,7 @@ $('#toggleToken').addEventListener('click', () => {
   $('#toggleToken').textContent = showing ? '显示' : '隐藏';
 });
 
+initializeNavigation();
 initializePublisher();
 refreshDashboard();
 setInterval(refreshDashboard, 15000);
