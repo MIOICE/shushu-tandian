@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#15171c">
-  <title>技术仪表盘 · 鼠鼠探店</title>
-  <link rel="stylesheet" href="/dashboard.css">
+  <title>技术与运营仪表盘 · 鼠鼠探店</title>
+  <link rel="stylesheet" href="/dashboard.css?v=20260912-2">
 </head>
 <body>
   <header class="dashboard-header">
@@ -15,6 +15,7 @@
     </a>
     <div class="header-actions">
       <span class="health-pill" id="overallHealth"><i></i><span>正在检查服务</span></span>
+      <a class="publish-link" href="#publisher">发布秒杀</a>
       <button class="refresh-button" id="refreshButton" type="button">刷新数据</button>
       <a class="home-link" href="/">返回用户首页 →</a>
     </div>
@@ -24,8 +25,8 @@
     <section class="dashboard-intro">
       <div>
         <span class="eyebrow">LOCAL OPERATIONS</span>
-        <h1>技术运行仪表盘</h1>
-        <p>集中查看缓存、核心链路与工程验收指标。此页面与面向学生的产品首页完全分离。</p>
+        <h1>技术与运营仪表盘</h1>
+        <p>发布校园秒杀活动，并集中查看缓存、核心链路与工程验收指标。此页面与学生产品首页完全分离。</p>
       </div>
       <div class="update-time"><span>最近刷新</span><b id="updatedAt">--:--:--</b><small>每 15 秒自动更新</small></div>
     </section>
@@ -35,6 +36,46 @@
       <article class="summary-card blue"><span class="card-label">异步受理目标</span><strong>≤ 50 <small>ms</small></strong><p>RocketMQ 解耦订单创建</p><em>原同步链路约 800ms</em></article>
       <article class="summary-card violet"><span class="card-label">缓存命中目标</span><strong>≥ 98 <small>%</small></strong><p>Caffeine + Redis 两级缓存</p><em>DB 查询目标约 40 次/分</em></article>
       <article class="summary-card green"><span class="card-label">风控拦截目标</span><strong>≥ 97 <small>%</small></strong><p>用户 / IP / 设备三维限流</p><em>Redis Lua 原子滑动窗口</em></article>
+    </section>
+
+    <section class="panel publisher-panel" id="publisher" aria-labelledby="publisherTitle">
+      <div class="panel-heading">
+        <div><span class="panel-kicker">CAMPAIGN OPERATIONS</span><h2 id="publisherTitle">发布秒杀活动</h2></div>
+        <span class="operation-badge">运营功能</span>
+      </div>
+      <div class="publisher-layout">
+        <form class="campaign-form" id="campaignForm">
+          <div class="form-intro">
+            <b>创建校园限时券</b>
+            <span>提交成功后会写入 MySQL，并立即初始化 Redis 活动库存。</span>
+          </div>
+          <div class="form-grid">
+            <label><span>所属校区</span><select id="campaignCampus" required><option value="">正在加载校区…</option></select></label>
+            <label><span>关联店铺</span><select id="campaignShop" required disabled><option value="">请先选择校区</option></select></label>
+            <label class="wide"><span>活动标题</span><input id="campaignTitle" maxlength="255" placeholder="例如：开学季 30 元代金券" required></label>
+            <label class="wide"><span>活动副标题</span><input id="campaignSubtitle" maxlength="255" placeholder="限量抢购，每位同学限购一份"></label>
+            <label><span>秒杀价（元）</span><input id="campaignPayValue" type="number" min="0" step="0.01" value="9.90" required></label>
+            <label><span>抵扣面额（元）</span><input id="campaignActualValue" type="number" min="0.01" step="0.01" value="30.00" required></label>
+            <label><span>活动库存</span><input id="campaignStock" type="number" min="1" step="1" value="100" required></label>
+            <label class="switch-field"><span>领取资格</span><span class="student-switch"><input id="campaignStudentOnly" type="checkbox"><i></i><b>仅限认证学生</b></span></label>
+            <label><span>开始时间</span><input id="campaignBegin" type="datetime-local" required></label>
+            <label><span>结束时间</span><input id="campaignEnd" type="datetime-local" required></label>
+            <label class="wide"><span>使用规则</span><textarea id="campaignRules" maxlength="1024" rows="3" placeholder="例如：到店核销，不与其他优惠同享"></textarea></label>
+            <label class="wide token-field"><span>运营令牌</span><div><input id="opsToken" type="password" autocomplete="current-password" placeholder="请输入服务端 OPS_TOKEN" required><button id="toggleToken" type="button">显示</button></div><small>仅用于请求头鉴权；勾选后只保存在当前标签页会话。</small></label>
+          </div>
+          <div class="form-footer">
+            <label class="remember-token"><input id="rememberToken" type="checkbox"><span>本会话记住令牌</span></label>
+            <button class="publish-button" id="publishButton" type="submit">确认发布活动</button>
+          </div>
+          <div class="publish-result" id="publishResult" role="status" hidden></div>
+        </form>
+
+        <aside class="campaign-preview">
+          <div class="preview-heading"><div><span>当前校区</span><b id="campaignCampusName">尚未选择</b></div><em id="campaignCount">0 个活动</em></div>
+          <div class="campaign-list" id="campaignList"><div class="campaign-empty">选择校区后查看活动</div></div>
+          <p>展示进行中和即将开始的活动；已结束活动不会出现在用户首页。</p>
+        </aside>
+      </div>
     </section>
 
     <section class="dashboard-grid">
@@ -90,6 +131,6 @@
       </article>
     </section>
   </main>
-  <script src="/dashboard.js" defer></script>
+  <script src="/dashboard.js?v=20260912-2" defer></script>
 </body>
 </html>

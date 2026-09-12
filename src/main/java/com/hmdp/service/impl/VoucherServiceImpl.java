@@ -6,6 +6,7 @@ import com.hmdp.entity.Voucher;
 import com.hmdp.mapper.VoucherMapper;
 import com.hmdp.entity.SeckillVoucher;
 import com.hmdp.entity.Campus;
+import com.hmdp.entity.Shop;
 import com.hmdp.service.ISeckillVoucherService;
 import com.hmdp.service.ICampusService;
 import com.hmdp.service.IShopService;
@@ -77,6 +78,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         if (error != null) {
             return Result.fail(error);
         }
+        normalizeVoucher(voucher);
         voucher.setType(0);
         if (voucher.getStatus() == null) {
             voucher.setStatus(1);
@@ -93,6 +95,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         if (error != null) {
             return Result.fail(error);
         }
+        normalizeVoucher(voucher);
         voucher.setType(1);
         if (voucher.getStatus() == null) {
             voucher.setStatus(1);
@@ -117,20 +120,34 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     }
 
     private String validateVoucher(Voucher voucher, boolean seckill) {
-        if (voucher == null || voucher.getShopId() == null || shopService.getById(voucher.getShopId()) == null) {
+        Shop shop = voucher == null || voucher.getShopId() == null
+                ? null : shopService.getById(voucher.getShopId());
+        if (shop == null) {
             return "关联店铺不存在";
         }
         if (voucher.getTitle() == null || voucher.getTitle().trim().isEmpty()
+                || voucher.getTitle().trim().length() > 255
                 || voucher.getPayValue() == null || voucher.getActualValue() == null
                 || voucher.getPayValue() < 0 || voucher.getActualValue() <= 0
                 || voucher.getPayValue() > voucher.getActualValue()) {
             return "优惠券标题或金额配置不合法";
         }
-        if (Integer.valueOf(1).equals(voucher.getStudentOnly())) {
-            Campus campus = voucher.getCampusId() == null ? null : campusService.getById(voucher.getCampusId());
+        if (voucher.getStudentOnly() != null
+                && !Integer.valueOf(0).equals(voucher.getStudentOnly())
+                && !Integer.valueOf(1).equals(voucher.getStudentOnly())) {
+            return "学生专享标记不合法";
+        }
+        if (voucher.getCampusId() != null) {
+            Campus campus = campusService.getById(voucher.getCampusId());
             if (campus == null || !Integer.valueOf(1).equals(campus.getStatus())) {
-                return "学生专享券必须绑定有效校区";
+                return "优惠券必须绑定有效校区";
             }
+            if (shop.getCampusId() == null || !voucher.getCampusId().equals(shop.getCampusId())) {
+                return "所选店铺不属于该校区";
+            }
+        }
+        if (Integer.valueOf(1).equals(voucher.getStudentOnly()) && voucher.getCampusId() == null) {
+            return "学生专享券必须绑定有效校区";
         }
         if (seckill && (voucher.getStock() == null || voucher.getStock() <= 0
                 || voucher.getBeginTime() == null || voucher.getEndTime() == null
@@ -139,5 +156,22 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             return "秒杀库存或活动时间不合法";
         }
         return null;
+    }
+
+    private void normalizeVoucher(Voucher voucher) {
+        voucher.setTitle(voucher.getTitle().trim());
+        voucher.setSubTitle(trimToNull(voucher.getSubTitle()));
+        voucher.setRules(trimToNull(voucher.getRules()));
+        if (voucher.getStudentOnly() == null) {
+            voucher.setStudentOnly(0);
+        }
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

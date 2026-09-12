@@ -275,6 +275,24 @@ class ArchitectureContractTests {
         assertTrue(application.contains("SHUSHU_AUTH_EXPOSE_CODE:false"));
     }
 
+    @Test
+    void operationsDashboardPublishesValidatedSeckillCampaigns() throws IOException {
+        String dashboard = resource("static/dashboard.html");
+        assertTrue(dashboard.contains("id=\"campaignForm\""));
+        assertTrue(dashboard.contains("id=\"opsToken\""));
+        assertTrue(dashboard.contains("id=\"campaignStudentOnly\""));
+
+        String dashboardScript = resource("static/dashboard.js");
+        assertTrue(dashboardScript.contains("api('/voucher/seckill'"));
+        assertTrue(dashboardScript.contains("'X-Ops-Token': token"));
+        assertTrue(dashboardScript.contains("Math.round(payYuan * 100)"));
+        assertTrue(dashboardScript.contains("sessionStorage.setItem('shushu_ops_token'"));
+
+        String voucherService = projectFile("src/main/java/com/hmdp/service/impl/VoucherServiceImpl.java");
+        assertTrue(voucherService.contains("所选店铺不属于该校区"));
+        assertTrue(voucherService.contains("reservationService.initialize(seckillVoucher, true)"));
+    }
+
     private String resource(String path) throws IOException {
         return StreamUtils.copyToString(
                 new ClassPathResource(path).getInputStream(), StandardCharsets.UTF_8);

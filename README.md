@@ -28,7 +28,7 @@ mvn spring-boot:run
 
 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、RocketMQ NameServer `9876`、Broker `10911`。配置均可用 [.env.example](./.env.example) 中的环境变量覆盖。
 
-启动成功后访问 [http://localhost:8081/](http://localhost:8081/) 查看鼠鼠探店用户首页，访问 [http://localhost:8081/dashboard.html](http://localhost:8081/dashboard.html) 查看技术仪表盘。
+启动成功后访问 [http://localhost:8081/](http://localhost:8081/) 查看鼠鼠探店用户首页，访问 [http://localhost:8081/dashboard.html](http://localhost:8081/dashboard.html) 查看技术与运营仪表盘。仪表盘中的“发布秒杀活动”支持按校区选择店铺、配置金额/库存/活动时间和学生资格；提交时需要输入与服务端 `OPS_TOKEN` 一致的运营令牌，发布成功后 MySQL 与 Redis 活动库存会同步初始化。
 
 验证码默认只写入应用日志。仅在本地界面演示时可设置 `SHUSHU_AUTH_EXPOSE_CODE=true`，页面会显示并自动填写验证码；生产环境必须保持 `false` 并替换为真实短信服务。
 
