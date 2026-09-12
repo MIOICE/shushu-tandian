@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff6b35">
+  <title>鼠鼠探店 · 大学生的校园生活指南</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="鼠鼠探店首页">
+      <span class="brand-mark" aria-hidden="true"><i></i></span>
+      <span>鼠鼠探店</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a class="active" href="#discover">校园发现</a>
+      <a href="#shops">附近好店</a>
+      <a href="#features">学生福利</a>
+    </nav>
+    <button class="status-pill" id="statusPill" type="button">
+      <span class="status-dot"></span><span id="statusText">服务连接中</span>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero" id="discover">
+      <div class="hero-copy">
+        <div class="eyebrow"><span>🐭</span> 大学生专属生活指南</div>
+        <h1>校园周边好去处，<br><em>鼠鼠替你探</em></h1>
+        <p>发现同学们真正喜欢的餐厅、娱乐和优惠。真实热度排序，学生专享福利，一站式解锁校园生活。</p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#shops">开始探索 <span>→</span></a>
+          <button class="ghost-button" id="randomButton" type="button">🎲 随便逛逛</button>
+        </div>
+        <div class="hero-proof">
+          <div><strong id="campusTotal">--</strong><span>所合作高校</span></div>
+          <div><strong>99.95%</strong><span>缓存命中率</span></div>
+          <div><strong>9ms</strong><span>秒杀平均响应</span></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="blob blob-one"></div><div class="blob blob-two"></div>
+        <div class="mascot-card">
+          <div class="mascot">
+            <span class="ear left"></span><span class="ear right"></span>
+            <span class="eye left"></span><span class="eye right"></span>
+            <span class="nose"></span><span class="whisker w1"></span><span class="whisker w2"></span>
+          </div>
+          <div class="mascot-copy"><b>鼠鼠今日推荐</b><span>跟着校园热度榜准没错！</span></div>
+        </div>
+        <div class="float-card score-card"><span>本周口碑</span><b>4.9 <i>★</i></b></div>
+        <div class="float-card discount-card"><b>学生专享</b><span>限时优惠进行中</span></div>
+        <div class="mini-pin">⌖</div>
+      </div>
+    </section>
+
+    <section class="campus-panel" aria-labelledby="campusTitle">
+      <div>
+        <span class="section-kicker">SELECT CAMPUS</span>
+        <h2 id="campusTitle">先选一所学校</h2>
+      </div>
+      <div class="campus-list" id="campusList" aria-live="polite">
+        <span class="skeleton campus-skeleton"></span><span class="skeleton campus-skeleton"></span>
+      </div>
+    </section>
+
+    <section class="content-section" id="shops">
+      <div class="section-heading">
+        <div><span class="section-kicker">CAMPUS PICKS</span><h2>同学都在逛</h2><p id="resultHint">正在寻找校园附近的人气好店…</p></div>
+        <label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索店名、商圈或标签"></label>
+      </div>
+
+      <div class="filter-row">
+        <div class="category-tabs" id="categoryTabs">
+          <button class="active" data-category="all" type="button">全部</button>
+          <button data-category="food" type="button">🍜 美食</button>
+          <button data-category="fun" type="button">🎤 娱乐</button>
+        </div>
+        <div class="sort-controls">
+          <label class="student-toggle"><input id="studentOnly" type="checkbox"><span></span>只看学生优惠</label>
+          <select id="sortSelect" aria-label="排序方式"><option value="hot">校园热度</option><option value="score">评分优先</option><option value="price">人均价格</option></select>
+        </div>
+      </div>
+
+      <div class="shop-layout">
+        <div class="shop-grid" id="shopGrid" aria-live="polite">
+          <article class="shop-card loading-card"><div class="skeleton cover"></div><div class="card-body"><span class="skeleton line wide"></span><span class="skeleton line"></span></div></article>
+          <article class="shop-card loading-card"><div class="skeleton cover"></div><div class="card-body"><span class="skeleton line wide"></span><span class="skeleton line"></span></div></article>
+          <article class="shop-card loading-card"><div class="skeleton cover"></div><div class="card-body"><span class="skeleton line wide"></span><span class="skeleton line"></span></div></article>
+        </div>
+        <aside class="insight-panel" id="features">
+          <div class="insight-head"><span>⚡</span><div><small>实时服务状态</small><b>鼠鼠雷达</b></div></div>
+          <div class="metric-ring" id="metricRing"><div><strong id="hitRate">--</strong><span>缓存命中率</span></div></div>
+          <div class="metric-list">
+            <div><span>Caffeine 本地命中</span><b id="localHits">--</b></div>
+            <div><span>Redis 共享命中</span><b id="redisHits">--</b></div>
+            <div><span>数据库回源</span><b id="dbQueries">--</b></div>
+          </div>
+          <div class="feature-note"><span>🛡️</span><p><b>三维风控保护中</b><br>用户、IP、设备指纹实时识别</p></div>
+          <button class="refresh-button" id="refreshMetrics" type="button">刷新运行指标</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="brand footer-brand"><span class="brand-mark"><i></i></span><span>鼠鼠探店</span></div><p>为大学生发现校园附近的每一份小确幸</p><span>Spring Boot · Redis · RocketMQ</span></footer>
+
+  <dialog id="shopDialog">
+    <button class="dialog-close" id="dialogClose" type="button" aria-label="关闭">×</button>
+    <div id="dialogContent"></div>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

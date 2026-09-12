@@ -1,6 +1,6 @@
 # 鼠鼠探店
 
-鼠鼠探店是一款面向大学生的校园生活与优惠发现后端，提供校区选择、学生优惠店铺发现、探店笔记、关注 Feed、优惠券秒杀和订单能力。项目基于 Spring Boot 2.3、MyBatis-Plus、MySQL、Redis、Caffeine 与 RocketMQ。
+鼠鼠探店是一款面向大学生的校园生活与优惠发现应用，提供响应式 Web 首页、校区选择、学生优惠店铺发现、探店笔记、关注 Feed、优惠券秒杀和订单能力。项目基于 Spring Boot 2.3、MyBatis-Plus、MySQL、Redis、Caffeine 与 RocketMQ。
 
 ## 核心链路
 
@@ -15,6 +15,7 @@
 - 学生认证：学号以服务端盐值加 SHA-256 后存储，申请由运营凭证审核；学生专享券使用本地券策略缓存和 Redis 认证缓存校验，审核结果会主动失效共享缓存。
 - 点评社区：笔记发布后写入关注者 Redis Feed，支持滚动分页；点赞和关注关系由 MySQL 唯一索引保证幂等，评论支持回复、分页与作者软删除。
 - 文件安全：上传目录通过 `UPLOAD_DIR` 配置，限制 5MB 与图片扩展名/MIME/文件头，路径归一化阻断目录穿越；删除操作仅允许运营凭证调用。
+- Web 前端：访问 `/` 即可进入响应式校园发现首页，支持校区切换、学生优惠筛选、热度/评分/价格排序、搜索、商铺详情和缓存运行指标；静态资源随 Spring Boot JAR 一起部署。
 
 ## 快速启动
 
@@ -26,6 +27,8 @@ mvn spring-boot:run
 ```
 
 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、RocketMQ NameServer `9876`、Broker `10911`。配置均可用 [.env.example](./.env.example) 中的环境变量覆盖。
+
+启动成功后访问 [http://localhost:8081/](http://localhost:8081/) 查看鼠鼠探店 Web 首页。
 
 支付回调、运营接口和学生身份摘要分别使用 `PAYMENT_CALLBACK_TOKEN`、`OPS_TOKEN` 和 `STUDENT_ID_SALT`。三者都应设置为不同的高强度随机值；未配置时对应的敏感操作会被拒绝。
 

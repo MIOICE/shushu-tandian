@@ -236,6 +236,17 @@ class ArchitectureContractTests {
         assertTrue(application.contains("ROCKETMQ_LOCAL_OFFSET_DIR"));
     }
 
+    @Test
+    void frontendIsPackagedAndPubliclyReachable() throws IOException {
+        assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/index.html")));
+        assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/styles.css")));
+        assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/app.js")));
+        String mvcConfig = projectFile("src/main/java/com/hmdp/config/MvcConfig.java");
+        assertTrue(mvcConfig.contains("\"/index.html\""));
+        assertTrue(mvcConfig.contains("\"/styles.css\""));
+        assertTrue(mvcConfig.contains("\"/app.js\""));
+    }
+
     private String resource(String path) throws IOException {
         return StreamUtils.copyToString(
                 new ClassPathResource(path).getInputStream(), StandardCharsets.UTF_8);
