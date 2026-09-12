@@ -3,8 +3,25 @@ const $=selector=>document.querySelector(selector);
 const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 const firstImage=shop=>(shop.images||'').split(',')[0];
 const scoreText=score=>score?(Number(score)/10).toFixed(1):'暂无';
+const wait=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
 
-async function api(url){const response=await fetch(url,{headers:{Accept:'application/json'}});if(!response.ok)throw new Error(`HTTP ${response.status}`);const body=await response.json();if(!body.success)throw new Error(body.errorMsg||'请求失败');return body.data}
+async function api(url){
+  let lastError;
+  for(let attempt=0;attempt<2;attempt++){
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),8000);
+    try{
+      const response=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal});
+      if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      const body=await response.json();
+      if(!body.success)throw new Error(body.errorMsg||'请求失败');
+      return body.data
+    }catch(error){
+      lastError=error;
+      if(attempt===0)await wait(350)
+    }finally{clearTimeout(timeout)}
+  }
+  throw new Error(lastError?.name==='AbortError'?'请求超时':lastError?.message||'请求失败')
+}
 
 async function bootstrap(){
   try{
