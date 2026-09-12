@@ -31,6 +31,8 @@ rocketmq:
     send-message-timeout: 3000
     retry-times-when-send-failed: 2
 shushu:
+  auth:
+    expose-code: ${SHUSHU_AUTH_EXPOSE_CODE:false}
   upload:
     directory: ${UPLOAD_DIR:./uploads}
   ops:

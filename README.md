@@ -15,7 +15,7 @@
 - 学生认证：学号以服务端盐值加 SHA-256 后存储，申请由运营凭证审核；学生专享券使用本地券策略缓存和 Redis 认证缓存校验，审核结果会主动失效共享缓存。
 - 点评社区：笔记发布后写入关注者 Redis Feed，支持滚动分页；点赞和关注关系由 MySQL 唯一索引保证幂等，评论支持回复、分页与作者软删除。
 - 文件安全：上传目录通过 `UPLOAD_DIR` 配置，限制 5MB 与图片扩展名/MIME/文件头，路径归一化阻断目录穿越；删除操作仅允许运营凭证调用。
-- Web 前端：访问 `/` 即可进入完全以学生用户为中心的响应式校园发现首页，支持校区切换、学生优惠筛选、热度/评分/价格排序、搜索和商铺详情；技术运行指标集中在独立仪表盘中，静态资源随 Spring Boot JAR 一起部署。
+- Web 前端：访问 `/` 即可进入完全以学生用户为中心的响应式校园发现首页，支持验证码登录/自动注册、登录态恢复、校区切换、限时秒杀、异步订单状态轮询、我的订单、模拟支付与取消回补，以及店铺筛选、搜索和详情；技术运行指标集中在独立仪表盘中，静态资源随 Spring Boot JAR 一起部署。
 
 ## 快速启动
 
@@ -29,6 +29,8 @@ mvn spring-boot:run
 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、RocketMQ NameServer `9876`、Broker `10911`。配置均可用 [.env.example](./.env.example) 中的环境变量覆盖。
 
 启动成功后访问 [http://localhost:8081/](http://localhost:8081/) 查看鼠鼠探店用户首页，访问 [http://localhost:8081/dashboard.html](http://localhost:8081/dashboard.html) 查看技术仪表盘。
+
+验证码默认只写入应用日志。仅在本地界面演示时可设置 `SHUSHU_AUTH_EXPOSE_CODE=true`，页面会显示并自动填写验证码；生产环境必须保持 `false` 并替换为真实短信服务。
 
 支付回调、运营接口和学生身份摘要分别使用 `PAYMENT_CALLBACK_TOKEN`、`OPS_TOKEN` 和 `STUDENT_ID_SALT`。三者都应设置为不同的高强度随机值；未配置时对应的敏感操作会被拒绝。
 
@@ -130,6 +132,10 @@ JMeter 聚合报告中的秒杀接口平均/中位耗时用于对比改造前同
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/voucher-order/seckill/{voucherId}` | 秒杀受理，返回订单号 |
+| GET | `/voucher/seckill/active?campusId=2` | 查询指定校区尚未结束的秒杀活动 |
+| POST | `/user/code?phone=手机号` | 发送登录验证码；本地可通过开关返回演示验证码 |
+| POST | `/user/login` | 验证码登录；手机号首次登录时自动注册 |
+| POST | `/user/logout` | 删除当前 Redis 登录态 |
 | GET | `/voucher-order/{orderId}` | 查询本人订单状态 |
 | GET | `/voucher-order/me?current=1&status=2` | 分页查询本人订单，状态参数可选 |
 | POST | `/voucher-order/{orderId}/pay` | 支付未关闭订单 |

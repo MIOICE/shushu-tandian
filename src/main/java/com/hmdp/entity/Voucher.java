@@ -101,6 +101,12 @@ public class Voucher implements Serializable {
     private LocalDateTime endTime;
 
     /**
+     * 活动列表展示用的店铺名称，不落库。
+     */
+    @TableField(exist = false)
+    private String shopName;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

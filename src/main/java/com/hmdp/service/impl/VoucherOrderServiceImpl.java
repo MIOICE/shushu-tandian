@@ -82,7 +82,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         VoucherOrderEvent event = new VoucherOrderEvent(orderId, userId, voucherId, System.currentTimeMillis());
         messagePublisher.publishOrder(event);
-        return Result.ok(orderId);
+        // 雪花订单号超过 JavaScript 安全整数范围，按字符串返回，避免前端轮询到错误订单。
+        return Result.ok(orderId.toString());
     }
 
     @Override

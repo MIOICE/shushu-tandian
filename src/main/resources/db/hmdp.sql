@@ -1357,6 +1357,20 @@ ALTER TABLE `tb_voucher`
 
 UPDATE `tb_voucher` SET `campus_id` = 2 WHERE `id` = 1;
 
+-- 鼠鼠探店演示活动：覆盖首次启动后的登录、秒杀、异步下单与订单查询闭环。
+INSERT INTO `tb_voucher`
+  (`id`, `shop_id`, `campus_id`, `student_only`, `title`, `sub_title`, `rules`,
+   `pay_value`, `actual_value`, `type`, `status`, `create_time`, `update_time`)
+VALUES
+  (2, 11, 2, 0, '校园开学季 30 元代金券', '限量 100 份，每位同学限购一份',
+   '仅限 INLOVE KTV（水晶城店）使用\\n不可与其他优惠同享', 990, 3000, 1, 1,
+   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO `tb_seckill_voucher`
+  (`voucher_id`, `stock`, `create_time`, `begin_time`, `end_time`, `update_time`)
+VALUES
+  (2, 100, CURRENT_TIMESTAMP, '2026-01-01 00:00:00', '2035-12-31 23:59:59', CURRENT_TIMESTAMP);
+
 -- ----------------------------
 -- Table structure for tb_voucher_order
 -- ----------------------------

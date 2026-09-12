@@ -61,4 +61,12 @@ public class VoucherController {
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
        return voucherService.queryVoucherOfShop(shopId);
     }
+
+    /**
+     * 查询校区内尚未结束的秒杀活动，供用户首页聚合展示。
+     */
+    @GetMapping("/seckill/active")
+    public Result queryActiveSeckillByCampus(@RequestParam("campusId") Long campusId) {
+        return voucherService.queryActiveSeckillByCampus(campusId);
+    }
 }

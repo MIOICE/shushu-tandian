@@ -19,6 +19,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -51,6 +52,22 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         // 查询优惠券信息
         List<Voucher> vouchers = getBaseMapper().queryVoucherOfShop(shopId);
         // 返回结果
+        return Result.ok(vouchers);
+    }
+
+    @Override
+    public Result queryActiveSeckillByCampus(Long campusId) {
+        Campus campus = campusId == null ? null : campusService.getById(campusId);
+        if (campus == null || !Integer.valueOf(1).equals(campus.getStatus())) {
+            return Result.fail("校区不存在或未开放");
+        }
+        List<Voucher> vouchers = getBaseMapper().queryActiveSeckillByCampus(campusId, LocalDateTime.now());
+        vouchers.forEach(voucher -> {
+            Integer redisStock = reservationService.currentStock(voucher.getId());
+            if (redisStock != null) {
+                voucher.setStock(redisStock);
+            }
+        });
         return Result.ok(vouchers);
     }
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ff6b35">
   <title>鼠鼠探店 · 大学生的校园生活指南</title>
-  <link rel="stylesheet" href="/styles.css?v=20260912-2">
+  <link rel="stylesheet" href="/styles.css?v=20260912-3">
 </head>
 <body>
   <header class="topbar">
@@ -15,10 +15,11 @@
     </a>
     <nav class="nav-links" aria-label="主导航">
       <a class="active" href="#discover">校园发现</a>
+      <a href="#seckill">限时秒杀</a>
       <a href="#shops">附近好店</a>
       <a href="#features">学生福利</a>
     </nav>
-    <a class="user-pill" href="#campusTitle"><span>⌖</span> 我的校园</a>
+    <button class="user-pill" id="userButton" type="button"><span>♙</span><span id="userLabel">登录 / 注册</span></button>
   </header>
 
   <main>
@@ -63,6 +64,16 @@
       </div>
     </section>
 
+    <section class="seckill-section" id="seckill" aria-labelledby="seckillTitle">
+      <div class="section-heading">
+        <div><span class="section-kicker">LIMITED OFFERS</span><h2 id="seckillTitle">校园限时秒杀</h2><p>Redis 原子抢购，抢到后可在“我的订单”查看处理进度</p></div>
+        <div class="seckill-clock"><span>距离活动结束</span><b id="seckillCountdown">--:--:--</b></div>
+      </div>
+      <div class="seckill-grid" id="seckillGrid" aria-live="polite">
+        <div class="seckill-placeholder">正在加载当前校区活动…</div>
+      </div>
+    </section>
+
     <section class="content-section" id="shops">
       <div class="section-heading">
         <div><span class="section-kicker">CAMPUS PICKS</span><h2>同学都在逛</h2><p id="resultHint">正在寻找校园附近的人气好店…</p></div>
@@ -104,7 +115,32 @@
     <button class="dialog-close" id="dialogClose" type="button" aria-label="关闭">×</button>
     <div id="dialogContent"></div>
   </dialog>
+  <dialog class="account-dialog" id="accountDialog">
+    <button class="dialog-close" id="accountClose" type="button" aria-label="关闭">×</button>
+    <section class="login-panel" id="loginPanel">
+      <span class="section-kicker">WELCOME TO SHUSHU</span>
+      <h2>登录鼠鼠探店</h2>
+      <p>未注册手机号验证成功后会自动创建账号。</p>
+      <form id="loginForm">
+        <label><span>手机号</span><input id="phoneInput" type="tel" inputmode="numeric" maxlength="11" autocomplete="tel" placeholder="请输入 11 位手机号" required></label>
+        <label><span>短信验证码</span><div class="code-row"><input id="codeInput" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位验证码" required><button id="sendCodeButton" type="button">获取验证码</button></div></label>
+        <p class="code-tip" id="codeTip">开发环境中，验证码默认输出到后端日志。</p>
+        <button class="login-submit" id="loginSubmit" type="submit">登录 / 自动注册</button>
+      </form>
+    </section>
+    <section class="profile-panel" id="profilePanel" hidden>
+      <div class="profile-avatar">鼠</div>
+      <span>已登录</span><h2 id="profileName">鼠鼠同学</h2><p id="profileCampus">选择校区后获得更准确的推荐</p>
+      <button class="account-action primary" id="ordersButton" type="button">查看我的订单</button>
+      <button class="account-action" id="logoutButton" type="button">退出登录</button>
+    </section>
+  </dialog>
+  <dialog class="orders-dialog" id="ordersDialog">
+    <button class="dialog-close" id="ordersClose" type="button" aria-label="关闭">×</button>
+    <div class="orders-head"><span class="section-kicker">MY ORDERS</span><h2>我的订单</h2><p>秒杀请求受理后，订单会由 RocketMQ 异步创建。</p></div>
+    <div class="order-list" id="orderList"><div class="order-empty">正在加载订单…</div></div>
+  </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="/app.js?v=20260912-2" defer></script>
+  <script src="/app.js?v=20260912-3" defer></script>
 </body>
 </html>

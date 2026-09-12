@@ -8,6 +8,7 @@ import com.hmdp.entity.UserInfo;
 import com.hmdp.service.IUserInfoService;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.UserHolder;
+import com.hmdp.risk.RiskLimit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,7 @@ public class UserController {
      * 发送手机验证码
      */
     @PostMapping("code")
+    @RiskLimit(userLimit = 5, ipLimit = 10, deviceLimit = 5, windowSeconds = 60)
     public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
         // 发送短信验证码并保存验证码
         return userService.sendCode(phone, session);
@@ -48,6 +50,7 @@ public class UserController {
      * @param loginForm 登录参数，包含手机号、验证码；或者手机号、密码
      */
     @PostMapping("/login")
+    @RiskLimit(userLimit = 20, ipLimit = 30, deviceLimit = 20, windowSeconds = 60)
     public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
         //  实现登录功能
         return userService.login(loginForm, session);

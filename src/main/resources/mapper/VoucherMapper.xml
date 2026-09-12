@@ -11,4 +11,23 @@
         LEFT JOIN  tb_seckill_voucher sv ON v.id = sv.voucher_id
         WHERE v.shop_id = #{shopId} AND v.status = 1
     </select>
+
+    <select id="queryActiveSeckillByCampus" resultType="com.hmdp.entity.Voucher">
+        SELECT
+            v.`id`, v.`shop_id`, s.`name` AS `shop_name`, v.`campus_id`, v.`student_only`,
+            v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`, v.`actual_value`, v.`type`,
+            sv.`stock`, sv.`begin_time`, sv.`end_time`
+        FROM tb_voucher v
+        INNER JOIN tb_seckill_voucher sv ON v.id = sv.voucher_id
+        INNER JOIN tb_shop s ON v.shop_id = s.id
+        WHERE v.type = 1
+          AND v.status = 1
+          AND sv.end_time &gt; #{now}
+          AND s.campus_id = #{campusId}
+          AND (v.campus_id IS NULL OR v.campus_id = #{campusId})
+        ORDER BY CASE WHEN sv.begin_time &lt;= #{now} THEN 0 ELSE 1 END,
+                 sv.begin_time ASC,
+                 v.id DESC
+        LIMIT 20
+    </select>
 </mapper>

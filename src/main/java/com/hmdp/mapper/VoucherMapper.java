@@ -5,6 +5,7 @@ import com.hmdp.entity.Voucher;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -17,4 +18,7 @@ import java.util.List;
 public interface VoucherMapper extends BaseMapper<Voucher> {
 
     List<Voucher> queryVoucherOfShop(@Param("shopId") Long shopId);
+
+    List<Voucher> queryActiveSeckillByCampus(@Param("campusId") Long campusId,
+                                              @Param("now") LocalDateTime now);
 }

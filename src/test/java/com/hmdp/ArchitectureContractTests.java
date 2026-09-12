@@ -253,6 +253,28 @@ class ArchitectureContractTests {
         assertTrue(mvcConfig.contains("\"/dashboard.js\""));
     }
 
+    @Test
+    void userFrontendConnectsAuthenticationSeckillAndOrderLifecycle() throws IOException {
+        String frontend = projectFile("src/main/resources/static/app.js");
+        assertTrue(frontend.contains("/user/code?phone="));
+        assertTrue(frontend.contains("/user/login"));
+        assertTrue(frontend.contains("/user/logout"));
+        assertTrue(frontend.contains("/voucher/seckill/active?campusId="));
+        assertTrue(frontend.contains("/voucher-order/seckill/"));
+        assertTrue(frontend.contains("/voucher-order/me?current=1"));
+        assertTrue(frontend.contains("pollOrder"));
+        assertTrue(frontend.contains("shushu_token"));
+
+        String mapper = resource("mapper/VoucherMapper.xml");
+        assertTrue(mapper.contains("queryActiveSeckillByCampus"));
+        assertTrue(mapper.contains("INNER JOIN tb_seckill_voucher"));
+
+        String orderService = projectFile("src/main/java/com/hmdp/service/impl/VoucherOrderServiceImpl.java");
+        assertTrue(orderService.contains("Result.ok(orderId.toString())"));
+        String application = resource("application.yaml");
+        assertTrue(application.contains("SHUSHU_AUTH_EXPOSE_CODE:false"));
+    }
+
     private String resource(String path) throws IOException {
         return StreamUtils.copyToString(
                 new ClassPathResource(path).getInputStream(), StandardCharsets.UTF_8);

@@ -19,6 +19,7 @@ import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
@@ -40,6 +41,9 @@ import static com.hmdp.utils.RedisConstants.*;
 @Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+
+    @Value("${shushu.auth.expose-code:false}")
+    private boolean exposeCode;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -64,7 +68,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //5.发送验证码
         log.debug("发送短信验证码成功，验证码：{}",code);
         // 返回ok
-        return Result.ok();
+        return Result.ok(exposeCode ? code : null);
     }
 
     @Override
@@ -83,6 +87,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             //3.不一致报错
             return  Result.fail("验证码错误！");
         }
+        // 验证码仅允许成功使用一次，防止在有效期内被重复登录。
+        stringRedisTemplate.delete(LOGIN_CODE_KEY + phone);
         //4.一致，根据手机号查询用户 select * from user where phone = ?
         User user = query().eq("phone", phone).one();
 

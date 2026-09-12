@@ -10,6 +10,8 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 /**
  * <p>
@@ -31,6 +33,7 @@ public class VoucherOrder implements Serializable {
      * 主键
      */
     @TableId(value = "id", type = IdType.INPUT)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /**
