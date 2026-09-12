@@ -241,10 +241,16 @@ class ArchitectureContractTests {
         assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/index.html")));
         assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/styles.css")));
         assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/app.js")));
+        assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/dashboard.html")));
+        assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/dashboard.css")));
+        assertTrue(Files.isRegularFile(Paths.get("src/main/resources/static/dashboard.js")));
         String mvcConfig = projectFile("src/main/java/com/hmdp/config/MvcConfig.java");
         assertTrue(mvcConfig.contains("\"/index.html\""));
         assertTrue(mvcConfig.contains("\"/styles.css\""));
         assertTrue(mvcConfig.contains("\"/app.js\""));
+        assertTrue(mvcConfig.contains("\"/dashboard.html\""));
+        assertTrue(mvcConfig.contains("\"/dashboard.css\""));
+        assertTrue(mvcConfig.contains("\"/dashboard.js\""));
     }
 
     private String resource(String path) throws IOException {

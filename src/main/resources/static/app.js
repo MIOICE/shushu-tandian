@@ -11,11 +11,10 @@ async function bootstrap(){
     state.campuses=await api('/campus');
     $('#campusTotal').textContent=state.campuses.length;
     state.campusId=state.campuses.find(item=>item.id===2)?.id||state.campuses[0]?.id;
-    renderCampuses();setOnline(true);await loadShops();await loadMetrics();
-  }catch(error){setOnline(false);showToast(`服务连接失败：${error.message}`);renderEmpty('暂时无法连接后端服务','请确认应用已在 8081 端口启动')}
+    renderCampuses();await loadShops();
+  }catch(error){showToast(`服务连接失败：${error.message}`);renderEmpty('暂时无法连接服务','鼠鼠正在努力恢复，请稍后再试')}
 }
 
-function setOnline(online){$('#statusText').textContent=online?'全部服务正常':'服务连接失败';$('#statusPill').classList.toggle('offline',!online)}
 function renderCampuses(){
   $('#campusList').innerHTML=state.campuses.map(item=>`<button class="campus-button ${item.id===state.campusId?'active':''}" data-id="${item.id}" type="button"><b>${escapeHtml(item.name.replace(/校区$/,''))}</b><small>${escapeHtml(item.city)} · ${escapeHtml(item.address)}</small></button>`).join('');
   document.querySelectorAll('.campus-button').forEach(button=>button.addEventListener('click',()=>{state.campusId=Number(button.dataset.id);renderCampuses();loadShops()}));
@@ -25,8 +24,9 @@ async function loadShops(){
   $('#shopGrid').classList.add('is-loading');
   try{
     state.shops=await api(`/shop/of/campus?campusId=${state.campusId}&studentOnly=${state.studentOnly}&sort=${state.sort}&current=1`);
-    renderShops();setOnline(true)
-  }catch(error){setOnline(false);renderEmpty('店铺加载失败',error.message)}finally{$('#shopGrid').classList.remove('is-loading')}
+    $('#shopTotal').textContent=state.shops.length;
+    renderShops();renderWeeklyList()
+  }catch(error){renderEmpty('店铺加载失败','鼠鼠暂时没有找到店铺，请稍后再试')}finally{$('#shopGrid').classList.remove('is-loading')}
 }
 function filteredShops(){
   return state.shops.filter(shop=>{
@@ -45,19 +45,18 @@ function renderShops(){
   }).join('');
   document.querySelectorAll('.shop-card').forEach(card=>{const open=()=>openShop(Number(card.dataset.id));card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter')open()})})
 }
+function renderWeeklyList(){
+  const shops=[...state.shops].sort((a,b)=>Number(b.sold||0)-Number(a.sold||0)).slice(0,3);
+  $('#weeklyList').innerHTML=shops.length?shops.map((shop,index)=>`<button class="weekly-item" data-id="${shop.id}" type="button"><span class="weekly-rank">${index+1}</span><span class="weekly-copy"><b>${escapeHtml(shop.name)}</b><small>${escapeHtml(shop.area||shop.campusName||'校园周边')} · ${Number(shop.sold||0).toLocaleString()} 人气</small></span><span class="weekly-score">${scoreText(shop.score)} ★</span></button>`).join(''):'<p>这所校园的热榜正在生成中…</p>';
+  document.querySelectorAll('.weekly-item').forEach(button=>button.addEventListener('click',()=>openShop(Number(button.dataset.id))))
+}
 function renderEmpty(title,detail){$('#shopGrid').innerHTML=`<div class="empty-state"><b>${escapeHtml(title)}</b><span>${escapeHtml(detail)}</span></div>`}
 async function openShop(id){
   try{
     const shop=await api(`/shop/${id}`);const image=firstImage(shop);
     $('#dialogContent').innerHTML=`${image?`<img class="dialog-cover" src="${escapeHtml(image)}" alt="${escapeHtml(shop.name)}" referrerpolicy="no-referrer">`:''}<div class="dialog-body"><span class="section-kicker">${shop.studentDiscount?'STUDENT SPECIAL':'CAMPUS PICK'}</span><h2>${escapeHtml(shop.name)}</h2><p>⌖ ${escapeHtml(shop.address)}<br>营业时间：${escapeHtml(shop.openHours||'以商家实际为准')}</p><div class="tag-list">${(shop.tags||'校园周边').split(',').map(tag=>`<span class="tag">${escapeHtml(tag)}</span>`).join('')}</div><div class="dialog-stats"><div><span>综合评分</span><b>${scoreText(shop.score)} ★</b></div><div><span>人均消费</span><b>¥${shop.avgPrice||'--'}</b></div><div><span>校园热度</span><b>${Number(shop.sold||0).toLocaleString()}</b></div></div></div>`;
-    $('#shopDialog').showModal();setTimeout(loadMetrics,150)
+    $('#shopDialog').showModal()
   }catch(error){showToast(`详情加载失败：${error.message}`)}
-}
-async function loadMetrics(){
-  try{
-    const metrics=await api('/shop/cache/stats');const rate=Number(metrics.hitRate||0);
-    $('#hitRate').textContent=`${(rate*100).toFixed(rate>0?2:0)}%`;$('#localHits').textContent=Number(metrics.localHits||0).toLocaleString();$('#redisHits').textContent=Number(metrics.redisHits||0).toLocaleString();$('#dbQueries').textContent=Number(metrics.databaseQueries||0).toLocaleString();$('#metricRing').style.background=`conic-gradient(var(--orange) ${Math.max(3,rate*360)}deg,#433d39 0deg)`
-  }catch(error){showToast('运行指标暂时不可用')}
 }
 function showToast(message){const toast=$('#toast');toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),2600)}
 
@@ -66,7 +65,6 @@ $('#studentOnly').addEventListener('change',event=>{state.studentOnly=event.targ
 $('#searchInput').addEventListener('input',event=>{state.query=event.target.value.trim();renderShops()});
 $('#categoryTabs').addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;state.category=button.dataset.category;document.querySelectorAll('#categoryTabs button').forEach(item=>item.classList.toggle('active',item===button));renderShops()});
 $('#randomButton').addEventListener('click',()=>{const shops=filteredShops();if(!shops.length)return showToast('当前没有可推荐的店铺');openShop(shops[Math.floor(Math.random()*shops.length)].id)});
-$('#refreshMetrics').addEventListener('click',()=>{loadMetrics();showToast('运行指标已刷新')});
 $('#dialogClose').addEventListener('click',()=>$('#shopDialog').close());
 $('#shopDialog').addEventListener('click',event=>{if(event.target===$('#shopDialog'))$('#shopDialog').close()});
 bootstrap();

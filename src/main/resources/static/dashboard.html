@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#15171c">
+  <title>技术仪表盘 · 鼠鼠探店</title>
+  <link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+  <header class="dashboard-header">
+    <a class="dashboard-brand" href="/">
+      <span class="brand-mark">鼠</span>
+      <span><b>鼠鼠探店</b><small>ENGINEERING CONSOLE</small></span>
+    </a>
+    <div class="header-actions">
+      <span class="health-pill" id="overallHealth"><i></i><span>正在检查服务</span></span>
+      <button class="refresh-button" id="refreshButton" type="button">刷新数据</button>
+      <a class="home-link" href="/">返回用户首页 →</a>
+    </div>
+  </header>
+
+  <main class="dashboard-shell">
+    <section class="dashboard-intro">
+      <div>
+        <span class="eyebrow">LOCAL OPERATIONS</span>
+        <h1>技术运行仪表盘</h1>
+        <p>集中查看缓存、核心链路与工程验收指标。此页面与面向学生的产品首页完全分离。</p>
+      </div>
+      <div class="update-time"><span>最近刷新</span><b id="updatedAt">--:--:--</b><small>每 15 秒自动更新</small></div>
+    </section>
+
+    <section class="summary-grid" aria-label="核心验收指标">
+      <article class="summary-card orange"><span class="card-label">秒杀并发验收</span><strong>0 <small>单</small></strong><p>超卖 · 重复下单均为 0</p><em>10 线程 / 1000 次请求</em></article>
+      <article class="summary-card blue"><span class="card-label">异步受理目标</span><strong>≤ 50 <small>ms</small></strong><p>RocketMQ 解耦订单创建</p><em>原同步链路约 800ms</em></article>
+      <article class="summary-card violet"><span class="card-label">缓存命中目标</span><strong>≥ 98 <small>%</small></strong><p>Caffeine + Redis 两级缓存</p><em>DB 查询目标约 40 次/分</em></article>
+      <article class="summary-card green"><span class="card-label">风控拦截目标</span><strong>≥ 97 <small>%</small></strong><p>用户 / IP / 设备三维限流</p><em>Redis Lua 原子滑动窗口</em></article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel cache-panel">
+        <div class="panel-heading"><div><span class="panel-kicker">LIVE METRICS</span><h2>两级缓存运行数据</h2></div><span class="live-badge">实时</span></div>
+        <div class="cache-content">
+          <div class="hit-gauge" id="hitGauge"><div><strong id="hitRate">--</strong><span>综合命中率</span></div></div>
+          <div class="metric-grid">
+            <div><span>总请求</span><b id="requests">--</b></div>
+            <div><span>Caffeine 命中</span><b id="localHits">--</b></div>
+            <div><span>Redis 命中</span><b id="redisHits">--</b></div>
+            <div><span>数据库查询</span><b id="dbQueries">--</b></div>
+          </div>
+        </div>
+        <p class="panel-note" id="cacheNote">正在读取 /shop/cache/stats …</p>
+      </article>
+
+      <article class="panel service-panel">
+        <div class="panel-heading"><div><span class="panel-kicker">RUNTIME</span><h2>服务健康状态</h2></div></div>
+        <div class="service-list">
+          <div class="service-row"><span class="service-icon">API</span><div><b>Spring Boot 应用</b><small>校园与店铺接口</small></div><span class="status checking" id="apiStatus">检查中</span></div>
+          <div class="service-row"><span class="service-icon">DB</span><div><b>MySQL 数据链路</b><small>通过业务查询探测</small></div><span class="status checking" id="dbStatus">检查中</span></div>
+          <div class="service-row"><span class="service-icon">R</span><div><b>Redis 缓存链路</b><small>通过缓存指标探测</small></div><span class="status checking" id="redisStatus">检查中</span></div>
+          <div class="service-row"><span class="service-icon">MQ</span><div><b>RocketMQ 异步链路</b><small>订单受理与缓存补偿</small></div><span class="status configured">已配置</span></div>
+        </div>
+      </article>
+
+      <article class="panel flow-panel">
+        <div class="panel-heading"><div><span class="panel-kicker">SECKILL PIPELINE</span><h2>秒杀异步下单链路</h2></div><span class="safe-badge">双重兜底</span></div>
+        <div class="pipeline">
+          <div class="flow-node"><span>01</span><b>Redis Lua</b><small>资格校验 + 预扣库存</small></div><i>→</i>
+          <div class="flow-node"><span>02</span><b>RocketMQ</b><small>异步投递订单事件</small></div><i>→</i>
+          <div class="flow-node"><span>03</span><b>MySQL</b><small>条件扣减 + 唯一索引</small></div><i>→</i>
+          <div class="flow-node"><span>04</span><b>定时补偿</b><small>超时关单 + 库存回补</small></div>
+        </div>
+        <div class="guard-grid">
+          <div><span>防超卖</span><b>Redis 预扣 + SQL stock &gt; 0</b></div>
+          <div><span>防重复</span><b>Lua 用户标记 + 数据库唯一索引</b></div>
+          <div><span>最终一致</span><b>待处理区重投 + 消费幂等</b></div>
+        </div>
+      </article>
+
+      <article class="panel acceptance-panel">
+        <div class="panel-heading"><div><span class="panel-kicker">ACCEPTANCE BASELINE</span><h2>工程验收基线</h2></div></div>
+        <div class="acceptance-table">
+          <div class="table-head"><span>能力</span><span>验证场景</span><span>验收目标</span></div>
+          <div><b>秒杀一致性</b><span>10 线程 / 1000 请求</span><em>0 超卖 · 0 重复</em></div>
+          <div><b>接口响应</b><span>RocketMQ 异步受理</span><em>约 800ms → 50ms</em></div>
+          <div><b>缓存治理</b><span>两级缓存与 MQ 补偿</span><em>命中率 ≥ 98%</em></div>
+          <div><b>风控限流</b><span>三维超频请求</span><em>拦截率 ≥ 97%</em></div>
+        </div>
+        <p class="baseline-note">以上为项目验收场景与目标；实时运行区只展示当前应用实际返回的数据。</p>
+      </article>
+    </section>
+  </main>
+  <script src="/dashboard.js" defer></script>
+</body>
+</html>

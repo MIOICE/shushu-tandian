@@ -18,9 +18,7 @@
       <a href="#shops">附近好店</a>
       <a href="#features">学生福利</a>
     </nav>
-    <button class="status-pill" id="statusPill" type="button">
-      <span class="status-dot"></span><span id="statusText">服务连接中</span>
-    </button>
+    <a class="user-pill" href="#campusTitle"><span>⌖</span> 我的校园</a>
   </header>
 
   <main>
@@ -35,8 +33,8 @@
         </div>
         <div class="hero-proof">
           <div><strong id="campusTotal">--</strong><span>所合作高校</span></div>
-          <div><strong>99.95%</strong><span>缓存命中率</span></div>
-          <div><strong>9ms</strong><span>秒杀平均响应</span></div>
+          <div><strong id="shopTotal">--</strong><span>家校园好店</span></div>
+          <div><strong>学生专享</strong><span>校园优惠不断</span></div>
         </div>
       </div>
       <div class="hero-visual" aria-hidden="true">
@@ -89,22 +87,18 @@
           <article class="shop-card loading-card"><div class="skeleton cover"></div><div class="card-body"><span class="skeleton line wide"></span><span class="skeleton line"></span></div></article>
           <article class="shop-card loading-card"><div class="skeleton cover"></div><div class="card-body"><span class="skeleton line wide"></span><span class="skeleton line"></span></div></article>
         </div>
-        <aside class="insight-panel" id="features">
-          <div class="insight-head"><span>⚡</span><div><small>实时服务状态</small><b>鼠鼠雷达</b></div></div>
-          <div class="metric-ring" id="metricRing"><div><strong id="hitRate">--</strong><span>缓存命中率</span></div></div>
-          <div class="metric-list">
-            <div><span>Caffeine 本地命中</span><b id="localHits">--</b></div>
-            <div><span>Redis 共享命中</span><b id="redisHits">--</b></div>
-            <div><span>数据库回源</span><b id="dbQueries">--</b></div>
-          </div>
-          <div class="feature-note"><span>🛡️</span><p><b>三维风控保护中</b><br>用户、IP、设备指纹实时识别</p></div>
-          <button class="refresh-button" id="refreshMetrics" type="button">刷新运行指标</button>
+        <aside class="insight-panel user-insight" id="features">
+          <div class="insight-head"><span>🔥</span><div><small>THIS WEEK</small><b>校园本周热榜</b></div></div>
+          <div class="weekly-list" id="weeklyList"><p>正在收集同学们的口碑…</p></div>
+          <div class="saving-card"><span>🎓</span><div><small>认证学生身份</small><b>解锁校园专属优惠</b><p>学生福利店会显示橙色专享标记</p></div></div>
+          <div class="feature-note"><span>💡</span><p><b>鼠鼠省钱提示</b><br>先看评分和同学热度，再决定去哪家</p></div>
+          <a class="benefit-button" href="#shops">去发现今日好店</a>
         </aside>
       </div>
     </section>
   </main>
 
-  <footer><div class="brand footer-brand"><span class="brand-mark"><i></i></span><span>鼠鼠探店</span></div><p>为大学生发现校园附近的每一份小确幸</p><span>Spring Boot · Redis · RocketMQ</span></footer>
+  <footer><div class="brand footer-brand"><span class="brand-mark"><i></i></span><span>鼠鼠探店</span></div><p>为大学生发现校园附近的每一份小确幸</p><span>杭州高校试运行 · 欢迎推荐好店</span></footer>
 
   <dialog id="shopDialog">
     <button class="dialog-close" id="dialogClose" type="button" aria-label="关闭">×</button>
